@@ -5,8 +5,24 @@ import json
 from dotenv import load_dotenv
 import os
 
-# Load the API key from the .env file or directly set it here
-openai.api_key = 'sk-cF_Rnxd-Xm8h1a6YuTZOET0LnDo4_Ph5xpQiP9dJ2nT3BlbkFJrxQ11hxUiX0AI9V-ZiLAL3QpaTzBewYpjOYIfSDJcA'
+# Set the page configuration first
+st.set_page_config(page_title="Philosophical Ideas Summarizer", layout="wide")
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Get the OpenAI API key from environment variables
+openai_api_key = os.getenv("OPENAI_API_KEY")
+
+# Debugging: Print the API key to check if it's loaded correctly (remove this in production)
+st.write(f"Loaded API Key: {openai_api_key}")
+
+if not openai_api_key:
+    st.error("OpenAI API key not found. Please set it in the .env file.")
+    st.stop()
+
+# Initialize the OpenAI client with the API key
+client = openai.OpenAI(api_key=openai_api_key)
 
 # Sefaria API URL
 SEFARIA_API_URL = "https://www.sefaria.org/api/texts/"
@@ -26,19 +42,18 @@ def fetch_text_from_sefaria(ref):
 
 # Function to summarize text using GPT
 def summarize_text(text):
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+    completion = client.chat.completions.create(
+        model="gpt-4",
         messages=[
             {"role": "system", "content": "You are a summarizer bot."},
             {"role": "user", "content": f"Summarize the following text:\n{text}"}
         ],
         max_tokens=150
     )
-    summary = response.choices[0].message['content'].strip()
+    summary = completion.choices[0].message.content.strip()
     return summary
 
 # Initialize the Streamlit app
-st.set_page_config(page_title="Philosophical Ideas Summarizer", layout="wide")
 st.title("Philosophical Ideas Summarizer")
 
 # Get input from user for Sefaria text reference
