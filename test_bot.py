@@ -99,7 +99,7 @@ st.markdown(custom_css, unsafe_allow_html=True)
 st.title("Philosophical Ideas Summarizer")
 
 # Get input from user for Sefaria text reference
-ref = st.text_input("Enter the text reference in the form Book and Chapter (e.g., Shev_Shmateta, Shmatta 1)", value="Shev_Shmateta, Shmatta 1")
+ref = st.text_input("Enter the text reference in the form Book, Chapter, and Verse (e.g., Shev_Shmateta, Shmatta 1 1)", value="Shev_Shmateta, Shmatta 1 1")
 
 if st.button("Fetch and Analyze Text"):
     if ref:
