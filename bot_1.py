@@ -8,6 +8,8 @@ from bs4 import BeautifulSoup
 import re
 import unicodedata
 import uuid
+import chardet
+import fitz  # PyMuPDF
 
 # Set the page configuration first
 st.set_page_config(page_title="Philosophical Ideas Summarizer", layout="wide")
@@ -258,8 +260,25 @@ if st.button("Fetch and Analyze Text"):
 # Function to handle file upload
 def handle_uploaded_file(file):
     if file:
-        content = file.read().decode("utf-8")
-        return content
+        file_type = file.name.split('.')[-1].lower()
+        raw_content = file.read()
+
+        if file_type == 'pdf':
+            # Handling PDF file
+            pdf_document = fitz.open(stream=raw_content, filetype="pdf")
+            content = ""
+            for page_num in range(pdf_document.page_count):
+                page = pdf_document.load_page(page_num)
+                content += page.get_text()
+            return content
+        else:
+            # Handling text file
+            result = chardet.detect(raw_content)
+            encoding = result['encoding']
+            if encoding is None:
+                encoding = 'utf-8'  # Fallback encoding
+            content = raw_content.decode(encoding)
+            return content
     return None
 
 # Sidebar for file upload
@@ -278,14 +297,38 @@ if knowledge_base:
         st.write(native)
         understand = understand_text(conversation_id_uploaded_file, uploaded_file_content)
         st.subheader("1. Overview")
-        overview = overview_text(conversation_id_uploaded_file, uploaded_file_content)
+        overview = overview_text(conversation_id_uploaded_file)
         st.write(overview)
-        st.subheader("2. Breakdown")
-        breakdown = breakdown_text(conversation_id_uploaded_file, uploaded_file_content)
-        st.write(breakdown)
-        st.subheader("3. Outline")
-        outline = outline_text(conversation_id_uploaded_file, uploaded_file_content)
+        st.subheader("2. Hierarchical Outline")
+        outline = outline_text(conversation_id_uploaded_file)
         st.write(outline)
-        st.subheader("4. Simplifying")
-        simplify = simplify_text(conversation_id_uploaded_file, uploaded_file_content)
+        st.subheader("3. Breakdown of Key Sections")
+        breakdown = breakdown_text(conversation_id_uploaded_file)
+        st.write(breakdown)
+        st.subheader("4. Simplifying Challenging Passages")
+        simplify = simplify_text(conversation_id_uploaded_file)
         st.write(simplify)
+        st.subheader("5. Concluding Discussion")
+        st.subheader("5.1. Conclusion")
+        conclusion = conclusion_text(conversation_id_uploaded_file)
+        st.write(conclusion)
+        st.subheader("5.2. Impact on Philosophical Thought")
+        impact = impact_text(conversation_id_uploaded_file)
+        st.write(impact)
+        st.subheader("5.3. Criticisms and Alternative Viewpoints")
+        criticism = criticism_text(conversation_id_uploaded_file)
+        st.write(criticism)
+        identify = identify_text(conversation_id_uploaded_file)
+        st.subheader("5.4. Summary of Core Arguments:")
+        summary = summary_text(conversation_id_uploaded_file)
+        st.write(summary)
+        st.subheader("5.5. Logical Connections:")
+        flow = flow_text(conversation_id_uploaded_file)
+        st.write(flow)
+        st.subheader("5.6. Counterarguments and Perspectives:")
+        counter = counter_text(conversation_id_uploaded_file)
+        st.write(counter)
+        st.subheader("5.7. Coherence and Persuasiveness Evaluation:")
+        coherence = coherence_text(conversation_id_uploaded_file)
+        st.write(coherence)
+
