@@ -221,14 +221,17 @@ body {
 # Inject the custom CSS into the Streamlit app
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# Inject JavaScript to scroll to the bottom of the page
+
+# Inject JavaScript to scroll to the bottom of the page with a delay
 js = f"""
 <script>
     function scroll(dummy_var_to_force_repeat_execution){{
         var textAreas = parent.document.querySelectorAll('section.main');
-        for (let index = 0; index < textAreas.length; index++) {{
-            textAreas[index].scrollTop = textAreas[index].scrollHeight;
-        }}
+        setTimeout(function() {{
+            for (let index = 0; index < textAreas.length; index++) {{
+                textAreas[index].scrollTop = textAreas[index].scrollHeight;
+            }}
+        }}, 100);  // Adjust the delay as needed (100 milliseconds)
     }}
     scroll({len(st.session_state['interaction'])})
 </script>
