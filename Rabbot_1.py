@@ -219,7 +219,7 @@ def coherence_text(conversation_id, temperature=0.5):
 #"""
 
 # Inject custom CSS into the Streamlit app
-st.markdown(custom_css, unsafe_allow_html=True)
+#st.markdown(custom_css, unsafe_allow_html=True)
 
 
 # Inject custom CSS and JavaScript for scrolling
