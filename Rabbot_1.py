@@ -208,7 +208,22 @@ def coherence_text(conversation_id, temperature=0.5):
 
 
 # Inject custom CSS to load Google Noto Sans Hebrew font
-custom_css = """
+#custom_css = """
+#<style>
+#@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700&display=swap');
+
+#body {
+#    font-family: 'Noto Sans Hebrew', sans-serif;
+#}
+#</style>
+#"""
+
+# Inject custom CSS into the Streamlit app
+st.markdown(custom_css, unsafe_allow_html=True)
+
+
+# Inject custom CSS and JavaScript for scrolling
+custom_css_and_js = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700&display=swap');
 
@@ -216,10 +231,15 @@ body {
     font-family: 'Noto Sans Hebrew', sans-serif;
 }
 </style>
+
+<script>
+    window.scrollTo(0, document.body.scrollHeight);
+</script>
 """
 
-# Inject custom CSS into the Streamlit app
-st.markdown(custom_css, unsafe_allow_html=True)
+# Inject the custom CSS and JavaScript into the Streamlit app
+st.markdown(custom_css_and_js, unsafe_allow_html=True)
+
 
 # Initialize the Streamlit app
 st.title("Philosophical Ideas Summarizer")

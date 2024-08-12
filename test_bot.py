@@ -18,7 +18,7 @@ st.set_page_config(page_title="Philosophical Ideas Summarizer", layout="wide")
 load_dotenv()
 
 # Get the OpenAI API key from environment variables
-openai_api_key = os.getenv("OPENAI_API_KEY")
+openai_api_key = os.getenv("OPENAI_API_KEY") or st.secrets["OPENAI_API_KEY"]
 
 # Debugging: Print the API key to check if it's loaded correctly (remove this in production)
 #st.write(f"Loaded API Key: {openai_api_key}")
@@ -33,7 +33,7 @@ client = openai.OpenAI(api_key=openai_api_key)
 # Initialise session state
 if 'interaction' not in st.session_state:
     st.session_state['interaction'] = ''
-st.write('TOP | the state is: '+st.session_state['interaction'])
+#st.write('TOP | the state is: '+st.session_state['interaction'])
 
 
 
@@ -124,80 +124,91 @@ def native_text(text, temperature=0.0):
         max_tokens=1500,
         temperature=temperature
     )
-    native = completion.choices[0].message.content.strip()
-    return native
+    st.session_state['native'] = completion.choices[0].message.content.strip()
+    return st.session_state['native']
 
 # 0. Understanding Text
 def understand_text(conversation_id, text, temperature=0.5):
-    content = f"You are a philosophical bot aiding jewish students understand the Tora. Your task is to make a complex philosophical work accessible to students by creating a clear, concise summary and a structured outline that captures the essence of the text without oversimplifying its core ideas. Please first read the text and undersand it thoroughly. Do not answer anything yet. Here is the text:\n{text}."
-    return call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    content = f"You are a philosophical bot aiding jewish students understand the Tora. Your task is to make a complex philosophical work accessible to students by creating a clear, concise summary and a structured outline that captures the essence of the text without oversimplifying its core ideas. We will create this summary together, each new propmt will be a new section. Please first read the text and undersand it thoroughly. Do not answer anything yet. Here is the text:\n{text}."
+    st.session_state['understand'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    return st.session_state['understand']
 
 # 1. Overview of the Text
 def overview_text(conversation_id, temperature=0.0):
-    content = f"Identify the central philosophical question or problem addressed in the text and give a brief overview in one paragraph."
-    # Save to session state
+    content = f"This is Section 1: Overview of the Text. Identify the central philosophical question or problem addressed in the text and give a brief overview in one paragraph. Only answeer with the overview"
     st.session_state['overview'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
-    return call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    return st.session_state['overview']
 
 # 2. Hierarchical Outline
 def outline_text(conversation_id, temperature=0.0):
-    content = f"Create a detailed outline of the text's structure using: 1. Roman Numerals: For main sections (I, II, III, etc.). 2. Capital Letters: For subsections (A, B, C, etc.). 3. Arabic Numerals: For specific points or examples (1, 2, 3, etc.). For each section and subsection always start from a new line. Use numbered list for specific points and examples. Only answer with the outline, do not say anything else."
-    return call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    content = f"This is Section 2: Hierarchical Outline. Create a detailed outline of the text's structure using: 1. Roman Numerals: For main sections (I, II, III, etc.). 2. Capital Letters: For subsections (A, B, C, etc.). 3. Arabic Numerals: For specific points or examples (1, 2, 3, etc.). For each section and subsection always start from a new line. Use numbered list for specific points and examples. Only answer with the outline, do not say anything else."
+    st.session_state['outline'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    return st.session_state['outline']
 
-# 3. Breakdown of Key Sections or Arguments
+# 3. Breakdown of Key Sections
 def breakdown_text(conversation_id, temperature=0.5):
-    content = f"For each major section you have just outlined do the following: 1. Main Idea: Summarize the main idea in 1-2 sentences. 2. Important Terminology or Concepts: Identify and define any crucial terminology or concepts introduced. 3. Relation to Overall Argument: Explain how this section or argument contributes to the overall thesis of the text."
-    return call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    content = f"This is Section 3: Breakdown of Key Sections. For each major section you have just outlined do the following: 1. Main Idea: Summarize the main idea in 1-2 sentences. 2. Important Terminology or Concepts: Identify and define any crucial terminology or concepts introduced. 3. Relation to Overall Argument: Explain how this section or argument contributes to the overall thesis of the text."
+    st.session_state['breakdown'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    return st.session_state['breakdown']
 
 # 4. Simplifying Challenging Passages
 def simplify_text(conversation_id, temperature=0.5):
-    content = f"Identify particularly challenging passages or ideas and provide simplified explanations to aid understanding. Only answer with the explanations, do not say anything else."
-    return call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    content = f"This is Section 4: Simplifying Challenging Passages. Identify particularly challenging passages or ideas and provide simplified explanations to aid understanding. Only answer with the explanations, do not say anything else."
+    st.session_state['simplify'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    return st.session_state['simplify']
 
 # 5. Concluding Discussion
-# 5.1. Central Thesis or Conclusion
+# 5.1. Central Thesis
 def conclusion_text(conversation_id, temperature=0.5):
-    content = f"Summarize the text's central thesis or conclusion in one paragraph. Only answer with the conclusion, do not say anything else. Do not repeat what you have said before."
-    return call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    content = f"From now on we will build the Concluding Discussion. This is Section 5.1: Central Thesis. Summarize the text's central thesis or conclusion in one paragraph. Only answer with the conclusion, do not say anything else. Do not repeat what you have said before."
+    st.session_state['conclusion'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    return st.session_state['conclusion']
 
 # 5.2. Impact on Philosophical Thought
 def impact_text(conversation_id, temperature=0.5):
-    content = f"Discuss the influence of this text on subsequent philosophical thought."
-    return call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    content = f"This is Section 5.2: Impact on Philosophical Thought. Discuss the influence of this text on subsequent philosophical thought."
+    st.session_state['impact'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    return st.session_state['impact']
 
 # 5.3. Criticisms and Alternative Viewpoints
 def criticism_text(conversation_id, temperature=0.5):
-    content = f"Now your task will be to present any major criticisms or alternative perspectives on the text. To do this properly, you need to conduct a deep dive into the provided text, concentrating exclusively on its philosophical contentions and the logical architecture underpinning its arguments. Approach this analysis with a critical eye, eschewing any basic introductions to the discussed concepts or unnecessary background information. Your analysis should dissect and summarize the fundamental arguments, laying bare the premises, conclusions, and the logical progression knitting them together. Examine the argumentative structure for logical consistency, coherence, and the use of deductive, inductive reasoning, or any logical inferences drawn within the text. Only give your final answer, do not say what you have done."
-    return call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    content = f"This is Section 5.3: Criticisms and Alternative Viewpoints. Now your task will be to present any major criticisms or alternative perspectives on the text. To do this properly, you need to conduct a deep dive into the provided text, concentrating exclusively on its philosophical contentions and the logical architecture underpinning its arguments. Approach this analysis with a critical eye, eschewing any basic introductions to the discussed concepts or unnecessary background information. Your analysis should dissect and summarize the fundamental arguments, laying bare the premises, conclusions, and the logical progression knitting them together. Examine the argumentative structure for logical consistency, coherence, and the use of deductive, inductive reasoning, or any logical inferences drawn within the text. Only give your final answer, do not say what you have done."
+    st.session_state['criticism'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    return st.session_state['criticism']
 
 # 5.3.5. Identify Core Arguments:
 def identify_text(conversation_id, temperature=0.5):
     content = f"Extract the primary arguments of this text. Do not answer anything for now. Do not repeat what you have said before."
-    return call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    st.session_state['identify'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    return st.session_state['identify']
 
 # 5.4. Summarize Core Arguments:
 def summary_text(conversation_id, temperature=0.5):
-    content = f"Succinctly summarize the primary arguments you have just found, including their foundational premises and derived conclusions. Only answer with the summaries, do not say what you have done.Do not repeat what you have said before."
-    return call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    content = f"This is Section 5.4: Summarize Core Arguments. Succinctly summarize the primary arguments you have just found, including their foundational premises and derived conclusions. Only answer with the summaries, do not say what you have done.Do not repeat what you have said before."
+    st.session_state['summary'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    return st.session_state['summary']
 
 # 5.5. Logical Connections and Flow:
 def flow_text(conversation_id, temperature=0.5):
-    content = f"Trace and elucidate the logical flow that binds these arguments, noting how each premise builds upon the other and the logical operations employed (e.g., deduction, induction). Do not say what you have done. Do not repeat what you have said before."
-    return call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    content = f"This is Section 5.5: Logical Connections and Flow. Trace and elucidate the logical flow that binds these arguments, noting how each premise builds upon the other and the logical operations employed (e.g., deduction, induction). Do not say what you have done. Do not repeat what you have said before."
+    st.session_state['flow'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    return st.session_state['flow']
 
 # 5.6. Counterarguments and Perspectives:
 def counter_text(conversation_id, temperature=0.5):
-    content = f"If the text engages with counterarguments or presents multiple viewpoints, summarize these discussions and analyze how they integrate into or diverge from the main arguments. Do not say what you have done. Do not repeat what you have said before."
-    return call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    content = f"This is Section 5.6: Counterarguments and Perspectives. If the text engages with counterarguments or presents multiple viewpoints, summarize these discussions and analyze how they integrate into or diverge from the main arguments. Do not say what you have done. Do not repeat what you have said before."
+    st.session_state['counter'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    return st.session_state['counter']
 
 # 5.7. Coherence and Persuasiveness Evaluation:
 def coherence_text(conversation_id, temperature=0.5):
-    content = f"Offer a concise critique of the argumentative structure's coherence and the persuasiveness of the presented arguments, grounded in the logical analysis you have conducted. Do not say what you have done. Do not repeat what you have said before."
-    return call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    content = f"This is Section 5.7: Coherence and Persuasiveness Evaluation. Offer a concise critique of the argumentative structure's coherence and the persuasiveness of the presented arguments, grounded in the logical analysis you have conducted. Do not say what you have done. Do not repeat what you have said before."
+    st.session_state['coherence'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
+    return st.session_state['coherence']
 
 
-# Inject custom CSS to load Google Noto Sans Hebrew font
-custom_css = """
+# Inject custom CSS and JavaScript for scrolling
+custom_css_and_js = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700&display=swap');
 
@@ -205,10 +216,14 @@ body {
     font-family: 'Noto Sans Hebrew', sans-serif;
 }
 </style>
+
+<script>
+    window.scrollTo(0, document.body.scrollHeight);
+</script>
 """
 
-# Inject custom CSS into the Streamlit app
-st.markdown(custom_css, unsafe_allow_html=True)
+# Inject the custom CSS and JavaScript into the Streamlit app
+st.markdown(custom_css_and_js, unsafe_allow_html=True)
 
 # Initialize the Streamlit app
 st.title("Philosophical Ideas Summarizer")
@@ -229,57 +244,57 @@ if st.session_state['interaction'] == 'Loop 2':
 # Loop 1
 # Buttton
 if st.session_state['interaction'] == 'Loop 1':
-    st.write('Button 2 | the state is: '+st.session_state['interaction'])
+    #st.write('Button 2 | the state is: '+st.session_state['interaction'])
     if st.button("Fetch and Analyze Text"):
         if ref:
             hebrew_text = fetch_text_from_sefaria(ref)
             if hebrew_text:
                 st.session_state['interaction'] = 'Loop 2'
-                st.write('TOP of analyze | the state is: '+st.session_state['interaction'])
+                #st.write('TOP of analyze | the state is: '+st.session_state['interaction'])
                 st.title("Text")
                 st.header("Hebrew Text")
                 st.write(f"<div style='font-family: Noto Sans Hebrew;'>{hebrew_text}</div>", unsafe_allow_html=True)
-                #translation = translate_text(hebrew_text)
-                #native = native_text(translation)
+                translation = translate_text(hebrew_text)
+                native = native_text(translation)
                 st.header("Translation")
-                #st.write(native)
+                st.write(native)
                 st.title("Analysis")
                 understand = understand_text(st.session_state['conversation_id'], hebrew_text)
                 st.header("1. Overview")
                 overview = overview_text(st.session_state['conversation_id'])
                 st.write(overview)
                 st.header("2. Hierarchical Outline")
-                #outline = outline_text(conversation_id)
-                #st.write(outline)
+                outline = outline_text(st.session_state['conversation_id'])
+                st.write(outline)
                 st.header("3. Breakdown of Key Sections")
-                #breakdown = breakdown_text(conversation_id)
-                #st.write(breakdown)
+                breakdown = breakdown_text(st.session_state['conversation_id'])
+                st.write(breakdown)
                 st.header("4. Simplifying Challenging Passages")
-                #simplify = simplify_text(conversation_id)
-                #st.write(simplify)
+                simplify = simplify_text(st.session_state['conversation_id'])
+                st.write(simplify)
                 st.header("5. Concluding Discussion")
-                st.subheader("5.1. Conclusion")
-                #conclusion = conclusion_text(conversation_id)
-                #st.write(conclusion)
+                st.subheader("5.1. Central Thesis")
+                conclusion = conclusion_text(st.session_state['conversation_id'])
+                st.write(conclusion)
                 st.subheader("5.2. Impact on Philosophical Thought")
-                #impact = impact_text(conversation_id)
-                #st.write(impact)
+                impact = impact_text(st.session_state['conversation_id'])
+                st.write(impact)
                 st.subheader("5.3. Criticisms and Alternative Viewpoints")
-                #criticism = criticism_text(conversation_id)
-                #st.write(criticism)
-                #identify = identify_text(conversation_id)
+                criticism = criticism_text(st.session_state['conversation_id'])
+                st.write(criticism)
+                identify = identify_text(st.session_state['conversation_id'])
                 st.subheader("5.4. Summary of Core Arguments:")
-                #summary = summary_text(conversation_id)
-                #st.write(summary)
+                summary = summary_text(st.session_state['conversation_id'])
+                st.write(summary)
                 st.subheader("5.5. Logical Connections:")
-                #flow = flow_text(conversation_id)
-                #st.write(flow)
+                flow = flow_text(st.session_state['conversation_id'])
+                st.write(flow)
                 st.subheader("5.6. Counterarguments and Perspectives:")
-                #counter = counter_text(conversation_id)
-                #st.write(counter)
+                counter = counter_text(st.session_state['conversation_id'])
+                st.write(counter)
                 st.subheader("5.7. Coherence and Persuasiveness Evaluation:")
-                #coherence = coherence_text(conversation_id)
-                #st.write(coherence)
+                coherence = coherence_text(st.session_state['conversation_id'])
+                st.write(coherence)
                 st.header("6. Chat with the Analysis")
                 user_question = st.text_input("Ask a question about the analysis:")
                 if st.button("Ask"):
@@ -290,49 +305,36 @@ if st.session_state['interaction'] == 'Loop 1':
 
 # Chatbot
 if st.session_state['interaction'] == 'Loop 1':
-    st.write('start of chat 2 | the state is: '+st.session_state['interaction'])
+    #st.write('start of chat 2 | the state is: '+st.session_state['interaction'])
     st.title("Text")
     st.header("Hebrew Text")
     st.write(f"<div style='font-family: Noto Sans Hebrew;'>{st.session_state['hebrew_text']}</div>", unsafe_allow_html=True)
-    #translation = translate_text(hebrew_text)
-    #native = native_text(translation)
     st.header("Translation")
-    #st.write(native)
+    st.write(st.session_state['native'])
     st.title("Analysis")
     st.header("1. Overview")
     st.write(st.session_state['overview'])
     st.header("2. Hierarchical Outline")
-    #outline = outline_text(conversation_id)
-    #st.write(outline)
+    st.write(st.session_state['outline'])
     st.header("3. Breakdown of Key Sections")
-    #breakdown = breakdown_text(conversation_id)
-    #st.write(breakdown)
+    st.write(st.session_state['breakdown'])
     st.header("4. Simplifying Challenging Passages")
-    #simplify = simplify_text(conversation_id)
-    #st.write(simplify)
+    st.write(st.session_state['simplify'])
     st.header("5. Concluding Discussion")
-    st.subheader("5.1. Conclusion")
-    #conclusion = conclusion_text(conversation_id)
-    #st.write(conclusion)
+    st.subheader("5.1. Central Thesis")
+    st.write(st.session_state['conclusion'])
     st.subheader("5.2. Impact on Philosophical Thought")
-    #impact = impact_text(conversation_id)
-    #st.write(impact)
+    st.write(st.session_state['impact'])
     st.subheader("5.3. Criticisms and Alternative Viewpoints")
-    #criticism = criticism_text(conversation_id)
-    #st.write(criticism)
-    #identify = identify_text(conversation_id)
+    st.write(st.session_state['criticism'])
     st.subheader("5.4. Summary of Core Arguments:")
-    #summary = summary_text(conversation_id)
-    #st.write(summary)
+    st.write(st.session_state['summary'])
     st.subheader("5.5. Logical Connections:")
-    #flow = flow_text(conversation_id)
-    #st.write(flow)
+    st.write(st.session_state['flow'])
     st.subheader("5.6. Counterarguments and Perspectives:")
-    #counter = counter_text(conversation_id)
-    #st.write(counter)
+    st.write(st.session_state['counter'])
     st.subheader("5.7. Coherence and Persuasiveness Evaluation:")
-    #coherence = coherence_text(conversation_id)
-    #st.write(coherence)
+    st.write(st.session_state['coherence'])
     st.header("6. Chat with the Analysis")
     user_question = st.text_input("Ask a question about the analysis:")
     if st.button("Ask"):
@@ -340,7 +342,7 @@ if st.session_state['interaction'] == 'Loop 1':
             # Use the function with a predefined conversation_id, e.g., 'analysis_chat'
             chatbot_response = call_openai_api_with_memory(st.session_state['conversation_id'], 'user', user_question, 0.5)
             st.session_state['chatbot_response'] = chatbot_response
-            st.write('bottom of chat 2 | the state is: '+st.session_state['interaction'])
+            #st.write('bottom of chat 2 | the state is: '+st.session_state['interaction'])
 
             # Display the chatbot's response
             st.write(f"**Chatbot:** {st.session_state['chatbot_response']}")
@@ -348,57 +350,57 @@ if st.session_state['interaction'] == 'Loop 1':
 
 # Loop 0
 if st.session_state['interaction'] == '':
-    st.write('Button 1 | the state is: '+st.session_state['interaction'])
+    #st.write('Button 1 | the state is: '+st.session_state['interaction'])
     if st.button("Fetch and Analyze Text "):
         if ref:
             hebrew_text = fetch_text_from_sefaria(ref)
             if hebrew_text:
                 st.session_state['interaction'] = 'Loop 1'
-                st.write('TOP of analyze | the state is: '+st.session_state['interaction'])
+                #st.write('TOP of analyze | the state is: '+st.session_state['interaction'])
                 st.title("Text")
                 st.header("Hebrew Text")
                 st.write(f"<div style='font-family: Noto Sans Hebrew;'>{hebrew_text}</div>", unsafe_allow_html=True)
-                #translation = translate_text(hebrew_text)
-                #native = native_text(translation)
+                translation = translate_text(hebrew_text)
+                native = native_text(translation)
                 st.header("Translation")
-                #st.write(native)
+                st.write(native)
                 st.title("Analysis")
                 understand = understand_text(st.session_state['conversation_id'], hebrew_text)
                 st.header("1. Overview")
                 overview = overview_text(st.session_state['conversation_id'])
                 st.write(overview)
                 st.header("2. Hierarchical Outline")
-                #outline = outline_text(conversation_id)
-                #st.write(outline)
+                outline = outline_text(st.session_state['conversation_id'])
+                st.write(outline)
                 st.header("3. Breakdown of Key Sections")
-                #breakdown = breakdown_text(conversation_id)
-                #st.write(breakdown)
+                breakdown = breakdown_text(st.session_state['conversation_id'])
+                st.write(breakdown)
                 st.header("4. Simplifying Challenging Passages")
-                #simplify = simplify_text(conversation_id)
-                #st.write(simplify)
+                simplify = simplify_text(st.session_state['conversation_id'])
+                st.write(simplify)
                 st.header("5. Concluding Discussion")
-                st.subheader("5.1. Conclusion")
-                #conclusion = conclusion_text(conversation_id)
-                #st.write(conclusion)
+                st.subheader("5.1. Central Thesis")
+                conclusion = conclusion_text(st.session_state['conversation_id'])
+                st.write(conclusion)
                 st.subheader("5.2. Impact on Philosophical Thought")
-                #impact = impact_text(conversation_id)
-                #st.write(impact)
+                impact = impact_text(st.session_state['conversation_id'])
+                st.write(impact)
                 st.subheader("5.3. Criticisms and Alternative Viewpoints")
-                #criticism = criticism_text(conversation_id)
-                #st.write(criticism)
-                #identify = identify_text(conversation_id)
+                criticism = criticism_text(st.session_state['conversation_id'])
+                st.write(criticism)
+                identify = identify_text(st.session_state['conversation_id'])
                 st.subheader("5.4. Summary of Core Arguments:")
-                #summary = summary_text(conversation_id)
-                #st.write(summary)
+                summary = summary_text(st.session_state['conversation_id'])
+                st.write(summary)
                 st.subheader("5.5. Logical Connections:")
-                #flow = flow_text(conversation_id)
-                #st.write(flow)
+                flow = flow_text(st.session_state['conversation_id'])
+                st.write(flow)
                 st.subheader("5.6. Counterarguments and Perspectives:")
-                #counter = counter_text(conversation_id)
-                #st.write(counter)
+                counter = counter_text(st.session_state['conversation_id'])
+                st.write(counter)
                 st.subheader("5.7. Coherence and Persuasiveness Evaluation:")
-                #coherence = coherence_text(conversation_id)
-                #st.write(coherence)
+                coherence = coherence_text(st.session_state['conversation_id'])
+                st.write(coherence)
                 st.header("6. Chat with the Analysis")
                 user_question = st.text_input("Ask a question about the analysis:")
                 if st.button("Ask"):
@@ -406,84 +408,4 @@ if st.session_state['interaction'] == '':
         else:
             st.error("Please enter a text reference.")
 
-
-
-
-
-# Function to handle file upload
-def handle_uploaded_file(file):
-    if file:
-        file_type = file.name.split('.')[-1].lower()
-        raw_content = file.read()
-
-        if file_type == 'pdf':
-            # Handling PDF file
-            pdf_document = fitz.open(stream=raw_content, filetype="pdf")
-            content = ""
-            for page_num in range(pdf_document.page_count):
-                page = pdf_document.load_page(page_num)
-                content += page.get_text()
-            return content
-        else:
-            # Handling text file
-            result = chardet.detect(raw_content)
-            encoding = result['encoding']
-            if encoding is None:
-                encoding = 'utf-8'  # Fallback encoding
-            content = raw_content.decode(encoding)
-            return content
-    return None
-
-# Sidebar for file upload
-st.sidebar.title("Upload Hebrew Text File")
-knowledge_base = st.sidebar.file_uploader("Upload Knowledge Base", type=["txt", "pdf"])
-
-if knowledge_base:
-    uploaded_file_content = handle_uploaded_file(knowledge_base)
-    if uploaded_file_content:
-        st.subheader("Uploaded File Content")
-        st.write(f"<div style='font-family: Noto Sans Hebrew;'>{uploaded_file_content}</div>", unsafe_allow_html=True)
-        conversation_id_uploaded_file = str(uuid.uuid4())
-        translation = translate_text(uploaded_file_content)
-        native = native_text(translation)
-        st.subheader("Translation")
-        st.write(native)
-        understand = understand_text(conversation_id_uploaded_file, uploaded_file_content)
-        st.subheader("1. Overview")
-        overview = overview_text(conversation_id_uploaded_file)
-        st.write(overview)
-        st.subheader("2. Hierarchical Outline")
-        outline = outline_text(conversation_id_uploaded_file)
-        st.write(outline)
-        st.subheader("3. Breakdown of Key Sections")
-        breakdown = breakdown_text(conversation_id_uploaded_file)
-        st.write(breakdown)
-        st.subheader("4. Simplifying Challenging Passages")
-        simplify = simplify_text(conversation_id_uploaded_file)
-        st.write(simplify)
-        st.subheader("5. Concluding Discussion")
-        st.subheader("5.1. Conclusion")
-        conclusion = conclusion_text(conversation_id_uploaded_file)
-        st.write(conclusion)
-        st.subheader("5.2. Impact on Philosophical Thought")
-        impact = impact_text(conversation_id_uploaded_file)
-        st.write(impact)
-        st.subheader("5.3. Criticisms and Alternative Viewpoints")
-        criticism = criticism_text(conversation_id_uploaded_file)
-        st.write(criticism)
-        identify = identify_text(conversation_id_uploaded_file)
-        st.subheader("5.4. Summary of Core Arguments:")
-        summary = summary_text(conversation_id_uploaded_file)
-        st.write(summary)
-        st.subheader("5.5. Logical Connections:")
-        flow = flow_text(conversation_id_uploaded_file)
-        st.write(flow)
-        st.subheader("5.6. Counterarguments and Perspectives:")
-        counter = counter_text(conversation_id_uploaded_file)
-        st.write(counter)
-        st.subheader("5.7. Coherence and Persuasiveness Evaluation:")
-        coherence = coherence_text(conversation_id_uploaded_file)
-        st.write(coherence)
-
-#3e66ac08-74e5-4099-84b0-b644eb484ad9
 
