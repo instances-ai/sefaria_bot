@@ -18,7 +18,7 @@ st.set_page_config(page_title="Philosophical Ideas Summarizer", layout="wide")
 load_dotenv()
 
 # Get the OpenAI API key from environment variables
-openai_api_key = os.getenv("OPENAI_API_KEY")
+openai_api_key = os.getenv("OPENAI_API_KEY") or st.secrets["OPENAI_API_KEY"]
 
 # Debugging: Print the API key to check if it's loaded correctly (remove this in production)
 #st.write(f"Loaded API Key: {openai_api_key}")
