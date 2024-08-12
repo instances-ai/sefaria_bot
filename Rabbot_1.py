@@ -221,18 +221,21 @@ body {
 # Inject the custom CSS into the Streamlit app
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# Custom JavaScript for scrolling
-scrolling_js = """
+# Inject JavaScript to scroll to the bottom of the page
+js = f"""
 <script>
-    setTimeout(function() {
-        window.scrollTo(0, document.body.scrollHeight);
-    }, 1000);
+    function scroll(dummy_var_to_force_repeat_execution){{
+        var textAreas = parent.document.querySelectorAll('section.main');
+        for (let index = 0; index < textAreas.length; index++) {{
+            textAreas[index].scrollTop = textAreas[index].scrollHeight;
+        }}
+    }}
+    scroll({len(st.session_state['interaction'])})
 </script>
 """
 
-# Inject the scrolling JavaScript into the Streamlit app
-st.markdown(scrolling_js, unsafe_allow_html=True)
-
+# Execute the JavaScript in the app
+st.components.v1.html(js, height=0)
 
 
 # Initialize the Streamlit app
