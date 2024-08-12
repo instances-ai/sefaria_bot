@@ -231,7 +231,7 @@ js = f"""
             for (let index = 0; index < textAreas.length; index++) {{
                 textAreas[index].scrollTop = textAreas[index].scrollHeight;
             }}
-        }}, 1000);  // Adjust the delay as needed (1000 milliseconds)
+        }}, 500);  // Adjust the delay as needed (500 milliseconds)
     }}
     scroll({len(st.session_state['interaction'])})
 </script>
