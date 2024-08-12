@@ -30,13 +30,6 @@ if not openai_api_key:
 # Initialize the OpenAI client with the API key
 client = openai.OpenAI(api_key=openai_api_key)
 
-# Initialise session state
-if 'interaction' not in st.session_state:
-    st.session_state['interaction'] = ''
-st.write('TOP | the state is: '+st.session_state['interaction'])
-
-
-
 # Sefaria API URL
 SEFARIA_API_URL = "https://www.sefaria.org/api/texts/"
 
@@ -66,36 +59,32 @@ def fetch_text_from_sefaria(ref):
         # Remove any remaining non-printable characters
         hebrew_text = ''.join(c for c in hebrew_text if unicodedata.category(c)[0] != 'C')
 
-        # Save to session state
-        st.session_state['hebrew_text'] = hebrew_text
         return hebrew_text
     else:
         st.error("Failed to fetch text from Sefaria API")
         return None
 
 # Initialize the conversation history
-if st.session_state['interaction'] == '':
-    conversation_history = {}
-    st.session_state['conversation_history'] = conversation_history
+conversation_history = {}
 
 # General function to call OpenAI API with memory
-def call_openai_api_with_memory(conversation_id, role, content, temperature):
-    if conversation_id not in st.session_state['conversation_history']:
-        st.session_state['conversation_history'][conversation_id] = [
+def call_openai_api_with_memory(conversation_id, role, content, temperature=0.5):
+    if conversation_id not in conversation_history:
+        conversation_history[conversation_id] = [
             {"role": "system", "content": "Your task is to make a complex philosophical work accessible to students. Always answer in English."}
         ]
 
-    st.session_state['conversation_history'][conversation_id].append({"role": role, "content": content})
+    conversation_history[conversation_id].append({"role": role, "content": content})
 
     completion = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=st.session_state['conversation_history'][conversation_id],
+        messages=conversation_history[conversation_id],
         max_tokens=1500,
         temperature=temperature
     )
 
     response_message = completion.choices[0].message.content.strip()
-    st.session_state['conversation_history'][conversation_id].append({"role": "assistant", "content": response_message})
+    conversation_history[conversation_id].append({"role": "assistant", "content": response_message})
 
     return response_message
 
@@ -114,7 +103,7 @@ def translate_text(text,temperature=0.0):
     return translation
 
 # Function to turn text to native speaker level using GPT
-def native_text(text, temperature=0.0):
+def native_text(text, temperature=0.):
     completion = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -135,8 +124,6 @@ def understand_text(conversation_id, text, temperature=0.5):
 # 1. Overview of the Text
 def overview_text(conversation_id, temperature=0.0):
     content = f"Identify the central philosophical question or problem addressed in the text and give a brief overview in one paragraph."
-    # Save to session state
-    st.session_state['overview'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
     return call_openai_api_with_memory(conversation_id, "user", content, temperature)
 
 # 2. Hierarchical Outline
@@ -213,202 +200,62 @@ st.markdown(custom_css, unsafe_allow_html=True)
 # Initialize the Streamlit app
 st.title("Philosophical Ideas Summarizer")
 
-
 # Generate a unique conversation ID
-if st.session_state['interaction'] == '':
-    conversation_id = str(uuid.uuid4())
-    st.session_state['conversation_id'] = conversation_id
+conversation_id = str(uuid.uuid4())
 
 # Get input from user for Sefaria text reference
 ref = st.text_input("Enter the text reference in the form 'Book, Chapter' (e.g., Shev_Shmateta, Shmatta 1)", value="Shev_Shmateta, Shmatta 1")
 
-
-if st.session_state['interaction'] == 'Loop 2':
-    st.session_state['interaction'] = 'Loop 1'
-
-# Loop 1
-# Buttton
-if st.session_state['interaction'] == 'Loop 1':
-    st.write('Button 2 | the state is: '+st.session_state['interaction'])
-    if st.button("Fetch and Analyze Text"):
-        if ref:
-            hebrew_text = fetch_text_from_sefaria(ref)
-            if hebrew_text:
-                st.session_state['interaction'] = 'Loop 2'
-                st.write('TOP of analyze | the state is: '+st.session_state['interaction'])
-                st.title("Text")
-                st.header("Hebrew Text")
-                st.write(f"<div style='font-family: Noto Sans Hebrew;'>{hebrew_text}</div>", unsafe_allow_html=True)
-                #translation = translate_text(hebrew_text)
-                #native = native_text(translation)
-                st.header("Translation")
-                #st.write(native)
-                st.title("Analysis")
-                understand = understand_text(st.session_state['conversation_id'], hebrew_text)
-                st.header("1. Overview")
-                overview = overview_text(st.session_state['conversation_id'])
-                st.write(overview)
-                st.header("2. Hierarchical Outline")
-                #outline = outline_text(conversation_id)
-                #st.write(outline)
-                st.header("3. Breakdown of Key Sections")
-                #breakdown = breakdown_text(conversation_id)
-                #st.write(breakdown)
-                st.header("4. Simplifying Challenging Passages")
-                #simplify = simplify_text(conversation_id)
-                #st.write(simplify)
-                st.header("5. Concluding Discussion")
-                st.subheader("5.1. Conclusion")
-                #conclusion = conclusion_text(conversation_id)
-                #st.write(conclusion)
-                st.subheader("5.2. Impact on Philosophical Thought")
-                #impact = impact_text(conversation_id)
-                #st.write(impact)
-                st.subheader("5.3. Criticisms and Alternative Viewpoints")
-                #criticism = criticism_text(conversation_id)
-                #st.write(criticism)
-                #identify = identify_text(conversation_id)
-                st.subheader("5.4. Summary of Core Arguments:")
-                #summary = summary_text(conversation_id)
-                #st.write(summary)
-                st.subheader("5.5. Logical Connections:")
-                #flow = flow_text(conversation_id)
-                #st.write(flow)
-                st.subheader("5.6. Counterarguments and Perspectives:")
-                #counter = counter_text(conversation_id)
-                #st.write(counter)
-                st.subheader("5.7. Coherence and Persuasiveness Evaluation:")
-                #coherence = coherence_text(conversation_id)
-                #st.write(coherence)
-                st.header("6. Chat with the Analysis")
-                user_question = st.text_input("Ask a question about the analysis:")
-                if st.button("Ask"):
-                    if user_question:
-                        st.session_state['interaction']
-        else:
-            st.error("Please enter a text reference.")
-
-# Chatbot
-if st.session_state['interaction'] == 'Loop 1':
-    st.write('start of chat 2 | the state is: '+st.session_state['interaction'])
-    st.title("Text")
-    st.header("Hebrew Text")
-    st.write(f"<div style='font-family: Noto Sans Hebrew;'>{st.session_state['hebrew_text']}</div>", unsafe_allow_html=True)
-    #translation = translate_text(hebrew_text)
-    #native = native_text(translation)
-    st.header("Translation")
-    #st.write(native)
-    st.title("Analysis")
-    st.header("1. Overview")
-    st.write(st.session_state['overview'])
-    st.header("2. Hierarchical Outline")
-    #outline = outline_text(conversation_id)
-    #st.write(outline)
-    st.header("3. Breakdown of Key Sections")
-    #breakdown = breakdown_text(conversation_id)
-    #st.write(breakdown)
-    st.header("4. Simplifying Challenging Passages")
-    #simplify = simplify_text(conversation_id)
-    #st.write(simplify)
-    st.header("5. Concluding Discussion")
-    st.subheader("5.1. Conclusion")
-    #conclusion = conclusion_text(conversation_id)
-    #st.write(conclusion)
-    st.subheader("5.2. Impact on Philosophical Thought")
-    #impact = impact_text(conversation_id)
-    #st.write(impact)
-    st.subheader("5.3. Criticisms and Alternative Viewpoints")
-    #criticism = criticism_text(conversation_id)
-    #st.write(criticism)
-    #identify = identify_text(conversation_id)
-    st.subheader("5.4. Summary of Core Arguments:")
-    #summary = summary_text(conversation_id)
-    #st.write(summary)
-    st.subheader("5.5. Logical Connections:")
-    #flow = flow_text(conversation_id)
-    #st.write(flow)
-    st.subheader("5.6. Counterarguments and Perspectives:")
-    #counter = counter_text(conversation_id)
-    #st.write(counter)
-    st.subheader("5.7. Coherence and Persuasiveness Evaluation:")
-    #coherence = coherence_text(conversation_id)
-    #st.write(coherence)
-    st.header("6. Chat with the Analysis")
-    user_question = st.text_input("Ask a question about the analysis:")
-    if st.button("Ask"):
-        if user_question:
-            # Use the function with a predefined conversation_id, e.g., 'analysis_chat'
-            chatbot_response = call_openai_api_with_memory(st.session_state['conversation_id'], 'user', user_question, 0.5)
-            st.session_state['chatbot_response'] = chatbot_response
-            st.write('bottom of chat 2 | the state is: '+st.session_state['interaction'])
-
-            # Display the chatbot's response
-            st.write(f"**Chatbot:** {st.session_state['chatbot_response']}")
-
-
-# Loop 0
-if st.session_state['interaction'] == '':
-    st.write('Button 1 | the state is: '+st.session_state['interaction'])
-    if st.button("Fetch and Analyze Text "):
-        if ref:
-            hebrew_text = fetch_text_from_sefaria(ref)
-            if hebrew_text:
-                st.session_state['interaction'] = 'Loop 1'
-                st.write('TOP of analyze | the state is: '+st.session_state['interaction'])
-                st.title("Text")
-                st.header("Hebrew Text")
-                st.write(f"<div style='font-family: Noto Sans Hebrew;'>{hebrew_text}</div>", unsafe_allow_html=True)
-                #translation = translate_text(hebrew_text)
-                #native = native_text(translation)
-                st.header("Translation")
-                #st.write(native)
-                st.title("Analysis")
-                understand = understand_text(st.session_state['conversation_id'], hebrew_text)
-                st.header("1. Overview")
-                overview = overview_text(st.session_state['conversation_id'])
-                st.write(overview)
-                st.header("2. Hierarchical Outline")
-                #outline = outline_text(conversation_id)
-                #st.write(outline)
-                st.header("3. Breakdown of Key Sections")
-                #breakdown = breakdown_text(conversation_id)
-                #st.write(breakdown)
-                st.header("4. Simplifying Challenging Passages")
-                #simplify = simplify_text(conversation_id)
-                #st.write(simplify)
-                st.header("5. Concluding Discussion")
-                st.subheader("5.1. Conclusion")
-                #conclusion = conclusion_text(conversation_id)
-                #st.write(conclusion)
-                st.subheader("5.2. Impact on Philosophical Thought")
-                #impact = impact_text(conversation_id)
-                #st.write(impact)
-                st.subheader("5.3. Criticisms and Alternative Viewpoints")
-                #criticism = criticism_text(conversation_id)
-                #st.write(criticism)
-                #identify = identify_text(conversation_id)
-                st.subheader("5.4. Summary of Core Arguments:")
-                #summary = summary_text(conversation_id)
-                #st.write(summary)
-                st.subheader("5.5. Logical Connections:")
-                #flow = flow_text(conversation_id)
-                #st.write(flow)
-                st.subheader("5.6. Counterarguments and Perspectives:")
-                #counter = counter_text(conversation_id)
-                #st.write(counter)
-                st.subheader("5.7. Coherence and Persuasiveness Evaluation:")
-                #coherence = coherence_text(conversation_id)
-                #st.write(coherence)
-                st.header("6. Chat with the Analysis")
-                user_question = st.text_input("Ask a question about the analysis:")
-                if st.button("Ask"):
-                    st.session_state['interaction']
-        else:
-            st.error("Please enter a text reference.")
-
-
-
-
+if st.button("Fetch and Analyze Text"):
+    if ref:
+        hebrew_text = fetch_text_from_sefaria(ref)
+        if hebrew_text:
+            st.title("Text")
+            st.header("Hebrew Text")
+            st.write(f"<div style='font-family: Noto Sans Hebrew;'>{hebrew_text}</div>", unsafe_allow_html=True)
+            translation = translate_text(hebrew_text)
+            native = native_text(translation)
+            st.header("Translation")
+            st.write(native)
+            st.title("Analysis")
+            understand = understand_text(conversation_id, hebrew_text)
+            st.header("1. Overview")
+            overview = overview_text(conversation_id)
+            st.write(overview)
+            st.header("2. Hierarchical Outline")
+            outline = outline_text(conversation_id)
+            st.write(outline)
+            st.header("3. Breakdown of Key Sections")
+            breakdown = breakdown_text(conversation_id)
+            st.write(breakdown)
+            st.header("4. Simplifying Challenging Passages")
+            simplify = simplify_text(conversation_id)
+            st.write(simplify)
+            st.header("5. Concluding Discussion")
+            st.subheader("5.1. Conclusion")
+            conclusion = conclusion_text(conversation_id)
+            st.write(conclusion)
+            st.subheader("5.2. Impact on Philosophical Thought")
+            impact = impact_text(conversation_id)
+            st.write(impact)
+            st.subheader("5.3. Criticisms and Alternative Viewpoints")
+            criticism = criticism_text(conversation_id)
+            st.write(criticism)
+            identify = identify_text(conversation_id)
+            st.subheader("5.4. Summary of Core Arguments:")
+            summary = summary_text(conversation_id)
+            st.write(summary)
+            st.subheader("5.5. Logical Connections:")
+            flow = flow_text(conversation_id)
+            st.write(flow)
+            st.subheader("5.6. Counterarguments and Perspectives:")
+            counter = counter_text(conversation_id)
+            st.write(counter)
+            st.subheader("5.7. Coherence and Persuasiveness Evaluation:")
+            coherence = coherence_text(conversation_id)
+            st.write(coherence)
+    else:
+        st.error("Please enter a text reference.")
 
 # Function to handle file upload
 def handle_uploaded_file(file):
@@ -484,6 +331,4 @@ if knowledge_base:
         st.subheader("5.7. Coherence and Persuasiveness Evaluation:")
         coherence = coherence_text(conversation_id_uploaded_file)
         st.write(coherence)
-
-#3e66ac08-74e5-4099-84b0-b644eb484ad9
 
