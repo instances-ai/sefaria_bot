@@ -207,23 +207,8 @@ def coherence_text(conversation_id, temperature=0.5):
     return st.session_state['coherence']
 
 
-# Inject custom CSS to load Google Noto Sans Hebrew font
-#custom_css = """
-#<style>
-#@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700&display=swap');
-
-#body {
-#    font-family: 'Noto Sans Hebrew', sans-serif;
-#}
-#</style>
-#"""
-
-# Inject custom CSS into the Streamlit app
-#st.markdown(custom_css, unsafe_allow_html=True)
-
-
-# Inject custom CSS and JavaScript for scrolling
-custom_css_and_js = """
+# Inject custom CSS for fonts
+custom_css = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700&display=swap');
 
@@ -231,14 +216,23 @@ body {
     font-family: 'Noto Sans Hebrew', sans-serif;
 }
 </style>
+"""
 
+# Inject the custom CSS into the Streamlit app
+st.markdown(custom_css, unsafe_allow_html=True)
+
+# Custom JavaScript for scrolling
+scrolling_js = """
 <script>
-    window.scrollTo(0, document.body.scrollHeight);
+    setTimeout(function() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }, 1000);
 </script>
 """
 
-# Inject the custom CSS and JavaScript into the Streamlit app
-st.markdown(custom_css_and_js, unsafe_allow_html=True)
+# Inject the scrolling JavaScript into the Streamlit app
+st.markdown(scrolling_js, unsafe_allow_html=True)
+
 
 
 # Initialize the Streamlit app
