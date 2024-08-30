@@ -70,7 +70,7 @@ SEFARIA_API_URL = "https://www.sefaria.org/api/texts/"
 
 #@st.cache_data
 # Function to fetch text from Sefaria API
-def fetch_text_from_sefaria(ref):
+def he_fetch_text_from_sefaria(ref):
     url = f"{SEFARIA_API_URL}{ref}"
     response = requests.get(url)
     if response.status_code == 200:
@@ -81,26 +81,60 @@ def fetch_text_from_sefaria(ref):
         hebrew_text = BeautifulSoup(' '.join(hebrew_text_html), "html.parser").get_text(separator=' ')
 
         # Normalize the text to remove special characters
-        hebrew_text = unicodedata.normalize('NFKD', hebrew_text)
+        #hebrew_text = unicodedata.normalize('NFKD', hebrew_text)
 
         # Remove non-breaking spaces and other special characters
-        hebrew_text = hebrew_text.replace('\xa0', ' ')
+        #hebrew_text = hebrew_text.replace('\xa0', ' ')
 
         # Remove non-standard whitespace characters
-        hebrew_text = re.sub(r'\s+', ' ', hebrew_text).strip()
+        #hebrew_text = re.sub(r'\s+', ' ', hebrew_text).strip()
 
         # Remove zero-width spaces and other control characters
-        hebrew_text = re.sub(r'[\u200B-\u200D\uFEFF]', '', hebrew_text)
+        #hebrew_text = re.sub(r'[\u200B-\u200D\uFEFF]', '', hebrew_text)
 
         # Remove any remaining non-printable characters
-        hebrew_text = ''.join(c for c in hebrew_text if unicodedata.category(c)[0] != 'C')
+        #hebrew_text = ''.join(c for c in hebrew_text if unicodedata.category(c)[0] != 'C')
 
         # Save to session state
-        st.session_state['hebrew_text_raw'] = hebrew_text
-        return st.session_state['hebrew_text_raw']
+        st.session_state['hebrew_text'] = hebrew_text
+        return st.session_state['hebrew_text']
     else:
-        st.error("Failed to fetch text from Sefaria API")
-        return None
+        st.error("Failed to fetch the text")
+        st.session_state['hebrew_text'] = "Failed to fetch the text"
+        return st.session_state['hebrew_text']
+
+def en_fetch_text_from_sefaria(ref):
+    url = f"{SEFARIA_API_URL}{ref}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        english_text_html = data.get('text', [])
+
+        # Joining the list to form a single string before cleaning HTML tags
+        english_text = BeautifulSoup(' '.join(english_text_html), "html.parser").get_text(separator=' ')
+
+        # Normalize the text to remove special characters
+        #english_text = unicodedata.normalize('NFKD', english_text)
+
+        # Remove non-breaking spaces and other special characters
+        #english_text = english_text.replace('\xa0', ' ')
+
+        # Remove non-standard whitespace characters
+        #english_text = re.sub(r'\s+', ' ', english_text).strip()
+
+        # Remove zero-width spaces and other control characters
+        #english_text = re.sub(r'[\u200B-\u200D\uFEFF]', '', english_text)
+
+        # Remove any remaining non-printable characters
+        #english_text = ''.join(c for c in english_text if unicodedata.category(c)[0] != 'C')
+
+        # Save to session state
+        st.session_state['english_text'] = english_text
+        return st.session_state['english_text']
+    else:
+        st.error("Failed to fetch the text")
+        st.session_state['hebrew_text'] = "Failed to fetch the text"
+        return st.session_state['english_text']
 
 
 # General function to call OpenAI API with memory
@@ -122,7 +156,7 @@ You are an English-speaking Jewish Orthodox rabbi.
 - God should always be G-d
 - Hebrew names should be used (if possible); so Moses is Moshe, Aaron is Aharon
 - From the analysis remove anything which implies like we're evaluating the work, that would be inappropriate. It's not for us to judge, just to learn and apply
-- The usage in English translations of Moshe or Aharon instead of Moses or Aaron is called transliteration. Transliteration is the process of transferring a word from one alphabet or writing system to another, typically by representing each letter or character with a corresponding one from the target language. In this case, "Moshe" and "Aharon" are transliterations of the Hebrew names "מֹשֶׁה" and "אַהֲרֹן", respectively, using the Latin alphabet. This is in contrast to translation, which focuses on conveying the meaning of the word, rather than just its sound or spelling. Always use transliteration for Jewish names.'''}
+- The usage in English translations of Moshe or Aharon instead of Moses or Aaron is called transliteration. Transliteration is the process of transferring a word from one alphabet or writing system to another, typically by representing each letter or character with a corresponding one from the target language. In this case, "Moshe" and "Aharon" are transliterations of the Hebrew names "מֹשֶׁה" and "אַהֲרֹן", respectively, using the Latin alphabet. Always transliterate all the names.'''}
         ]
 
     st.session_state['conversation_history'][conversation_id].append({"role": role, "content": content})
@@ -282,19 +316,18 @@ Chorus:
 
     return response_message
 
-#@st.cache_data
-#Function to re-write hebrew text
-def rewrite_hebrew_text(conversation_id, text, temperature=0.5):
-    content = f'''Re-write the following text in hebrew, avoiding repetition. Here is the text: \n{text}. Skip lines when appropriate.  Do not use bold or italic font, do not say what you have done, do not say anaything else. Respond with only the re-written text. '''
-    st.session_state['hebrew_text'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
-    return st.session_state['hebrew_text']
+# @st.cache_data
+# # Function to translate text using GPT
+# def translate_native_text(conversation_id, text, temperature=0.5):
+#     content = f'''The usage in English translations of Moshe or Aharon instead of Moses or Aaron is called transliteration.
 
-@st.cache_data
-# Function to translate text using GPT
-def translate_native_text(conversation_id, text, temperature=0.5):
-    content = f''' Translate the following text to english, always using transliteration for Jewish names:\n{text}\n. Answer only with the translated text. Do not say anything else, do not say what you have done.'''
-    st.session_state['translation'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
-    return st.session_state['translation']
+# Transliteration is the process of transferring a word from one alphabet or writing system to another, typically by representing each letter or character with a corresponding one from the target language. In this case, "Moshe" and "Aharon" are transliterations of the Hebrew names "מֹשֶׁה" and "אַהֲרֹן", respectively, using the Latin alphabet.
+
+# This is in contrast to translation, which focuses on conveying the meaning of the word, rather than just its sound or spelling.
+
+# First transliterate the following text to english:\n{text}. Now reformulate your transliteration to englishnative speaker level. Answer only with the native speaker level english text. Do not say anything else, do not say what you have done.'''
+#     st.session_state['translation'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
+#     return st.session_state['translation']
 
 @st.cache_data
 # Summary
@@ -611,13 +644,17 @@ for question, response in reversed(st.session_state['chat_history']):
 
 st.header("Choose your Text 📖")
 
-if 'translation' not in st.session_state:
-    #st.session_state['Fetch'] = ''
-    #st.session_state['hebrew_text'] = ''
-    st.session_state['translation'] = ''
+if 'Fetch' not in st.session_state:
+    st.session_state['Fetch'] = False
     st.session_state['ref'] = ''
-    #st.session_state['Text'] = ''
-    #st.session_state['Translation'] = ''
+
+# if 'translation' not in st.session_state:
+#     #st.session_state['Fetch'] = ''
+#     #st.session_state['hebrew_text'] = ''
+#     st.session_state['translation'] = ''
+#     st.session_state['ref'] = ''
+#     #st.session_state['Text'] = ''
+#     #st.session_state['Translation'] = ''
 
 # Create two columns
 col1, col2, col3, col4, col5, col6 = st.columns(6)
@@ -629,7 +666,7 @@ with col1:
     ("Shev Shmateta", "Tikkunei Zohar", "Genesis"),)
 
 with col2:
-    chapter = st.text_input("Chapter")
+    chapter = st.text_input("Chapter number")
 
 
 if book == 'Tikkunei Zohar' and 'a' not in chapter and 'b' not in chapter and 'c' not in chapter:
@@ -666,15 +703,16 @@ if st.button("Fetch and Translate"):
             st.session_state['impact_expander_open'] = False
             st.session_state['impact'] = ''
             st.session_state['show_starters'] = True
+            st.session_state['Fetch']  = True
 
-        if ref:
-            fetch_text_from_sefaria(ref)
-            rewrite_hebrew_text(st.session_state['conversation_id'], st.session_state['hebrew_text_raw'], temperature=1)
-            translate_native_text(st.session_state['conversation_id'], st.session_state['hebrew_text'])
+        #if ref:
+            he_fetch_text_from_sefaria(ref)
+            en_fetch_text_from_sefaria(ref)
+            #translate_native_text(st.session_state['conversation_id'], st.session_state['hebrew_text'])
             st.session_state['ref']  = ref
             #st.session_state['Text'] = 'Text'
             #st.session_state['Translation'] = 'Translation'
-            st.rerun()
+        st.rerun()
 
 
 # Create two columns
@@ -682,16 +720,24 @@ col1, col2 = st.columns(2)
 
 # Add content to the first column
 with col1:
-    if st.session_state['translation']  != '':
-        st.subheader('Text 📜')
-        st.write(f"<div style='font-family: Noto Sans Hebrew;'>{st.session_state['hebrew_text']}</div>", unsafe_allow_html=True)
+    #if st.session_state['translation']  != '':
+        if st.session_state['Fetch']  == True:
+            st.subheader('Text 📜')
+            if st.session_state['hebrew_text'] == '':
+                st.write('The API failed, please try again')
+            else:
+                st.write(f"<div style='font-family: Noto Sans Hebrew;'>{st.session_state['hebrew_text']}</div>", unsafe_allow_html=True)
 
 
 # Add content to the second column
 with col2:
-    if st.session_state['translation']  != '':
-        st.subheader('Translation 🌐')
-        st.write(st.session_state['translation'])
+    #if st.session_state['translation']  != '':
+        if st.session_state['Fetch']  == True:
+            st.subheader('Translation 🌐')
+            if st.session_state['hebrew_text'] == '':
+                st.write('')
+            else:
+                st.write(st.session_state['english_text'])
 
 
 
@@ -903,24 +949,13 @@ with st.expander("Impact of the Text on Philosophical Thought", expanded=st.sess
 
 ############################ CSS ############################
 
-# # Inject custom CSS for fonts
-# custom_css = """
-# <style>
-# @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700&display=swap');
-
-# body {
-#     font-family: 'Noto Sans Hebrew', sans-serif;
-# }
-# </style>
-# """
-
-# Inject custom CSS for fonts and Hebrew text alignment
+# Inject custom CSS for fonts
 custom_css = """
 <style>
-/* Target the div that contains the Hebrew text */
-div[style*="Noto Sans Hebrew"] {
-    direction: rtl;
-    text-align: right;
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700&display=swap');
+
+body {
+    font-family: 'Noto Sans Hebrew', sans-serif;
 }
 </style>
 """
