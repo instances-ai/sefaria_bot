@@ -888,22 +888,22 @@ body {
 st.markdown(custom_css, unsafe_allow_html=True)
 
 
-# Inject JavaScript to scroll to the bottom of the page with a delay
-js = f"""
-<script>
-    function scroll(dummy_var_to_force_repeat_execution){{
-        var textAreas = parent.document.querySelectorAll('section.main');
-        setTimeout(function() {{
-            for (let index = 0; index < textAreas.length; index++) {{
-                textAreas[index].scrollTop = textAreas[index].scrollHeight;
-            }}
-        }}, 500);  // Adjust the delay as needed (500 milliseconds)
-    }}
-    scroll({len(st.session_state['interaction'])})
-</script>
-"""
+# # Inject JavaScript to scroll to the bottom of the page with a delay
+# js = f"""
+# <script>
+#     function scroll(dummy_var_to_force_repeat_execution){{
+#         var textAreas = parent.document.querySelectorAll('section.main');
+#         setTimeout(function() {{
+#             for (let index = 0; index < textAreas.length; index++) {{
+#                 textAreas[index].scrollTop = textAreas[index].scrollHeight;
+#             }}
+#         }}, 500);  // Adjust the delay as needed (500 milliseconds)
+#     }}
+#     scroll({len(st.session_state['interaction'])})
+# </script>
+# """
 
-# Execute the JavaScript in the app
-st.components.v1.html(js, height=0)
+# # Execute the JavaScript in the app
+# st.components.v1.html(js, height=0)
 
 
