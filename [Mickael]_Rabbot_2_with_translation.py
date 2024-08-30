@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 import re
 import unicodedata
 import uuid
+from PIL import Image
 #from streamlit_extras.app_logo import add_logo
 #import chardet
 #import fitz  # PyMuPDF
@@ -19,7 +20,8 @@ import uuid
 ############################ Setting up Page ############################
 
 # Set the page configuration first
-st.set_page_config(page_title="Talmud Analysis Web Tool", layout="wide")
+im = Image.open("UI/Assets/favicon.ico")
+st.set_page_config(page_title="Talmud Analysis Web Tool", page_icon=im,layout="wide")
 
 # Load environment variables from .env file
 load_dotenv()
@@ -49,6 +51,7 @@ if 'interaction' not in st.session_state:
 # Initialize the Streamlit app
 #add_logo("../[Sefaria_Bot]_2_UI/Assets/[Sefaria_Bot]_Spait_logo_no_backgound.jpeg", height=300)
 st.image("UI/Assets/[Sefaria_Bot]_Spait_logo_no_backgound.jpeg", width=100)
+
 
 st.title("Talmud Analysis Web Tool")
 st.write('')
@@ -105,7 +108,7 @@ def call_openai_api_with_memory(conversation_id, role, content, temperature):
     if conversation_id not in st.session_state['conversation_history']:
         st.session_state['conversation_history'][conversation_id] = [
             {"role": "system", "content": '''#CONTEXT:
-You will be helping students understand a complex philosophical work by making it more accessible to them.
+You are helping students understand a complex philosophical work by making it more accessible to them.
 
 #ROLE:
 You are an English-speaking Jewish Orthodox rabbi.
@@ -325,22 +328,23 @@ def background_text(conversation_id, ref, temperature=1):
 @st.cache_data
 # Breakdown of Key Sections
 def breakdown_text(conversation_id, ref, temperature=1):
-    content = f"This Section is called 'Breakdown of Key Sections'. Identify key sections and for each do the following: 1. Main Idea: Summarize the main idea in 1-2 sentences. 2. Important Terminology or Concepts: Identify and define any crucial terminology or concepts introduced. 3. Relation to Overall Argument: Explain how this section or argument contributes to the overall thesis of the text."
+    content = f"This Section is called 'Breakdown of Key Sections'. Identify key sections or {ref} and for each do the following: 1. Main Idea: Summarize the main idea in 1-2 sentences. 2. Important Terminology or Concepts: Identify and define any crucial terminology or concepts introduced. 3. Relation to Overall Argument: Explain how this section or argument contributes to the overall thesis of the text."
     st.session_state['breakdown'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
     return st.session_state['breakdown']
 
 @st.cache_data
 # Simplifying Challenging Passages
 def simplify_text(conversation_id, ref, passage, temperature=1):
-    content = f"This is Section is called 'Simplification of Challenging Passages'. The user finds this difficult: {passage}. Locate the appropriate passage in the text and provide simplified explanations to aid understanding. Only answer with the explanations, do not say anything else."
+    content = f"This is Section is called 'Simplification of Challenging Passages'. The user finds this difficult: {passage} in the text {ref}. Locate the appropriate passage in the text and provide simplified explanations to aid understanding. Only answer with the explanations, do not say anything else."
     st.session_state['simplify'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
     return st.session_state['simplify']
 
 @st.cache_data
 # Identify Core Arguments
 def identify_text(conversation_id, ref, temperature=1):
-    content = f'''#TASK CRITERIA:
-1. Focus on identifying and summarizing the core arguments presented in the text
+    content = f'''This Section is called 'Identification and Summary of Core Arguments'
+    #TASK CRITERIA:
+1. Focus on identifying and summarizing the core arguments presented in the text {ref}
 2. Provide clear explanations of the reasoning behind each argument
 3. Discuss the significance and implications of the arguments in the context of Jewish philosophy
 4. Avoid going into excessive detail or tangents unrelated to the core arguments
@@ -352,15 +356,16 @@ def identify_text(conversation_id, ref, temperature=1):
 @st.cache_data
 # Logical Connections and Flow
 def flow_text(conversation_id, ref, temperature=0.5):
-    content = f"This is Section 5.5: Logical Connections and Flow. Trace and elucidate the logical flow that binds these arguments, noting how each premise builds upon the other and the logical operations employed (e.g., deduction, induction). Do not say what you have done. Do not repeat what you have said before."
+    content = f"This Section is called 'Logical Connections Between Core Arguments'. Trace and elucidate the logical flow that binds the arguments presented in the text {ref}, noting how each premise builds upon the other and the logical operations employed (e.g., deduction, induction). Do not say what you have done. Do not repeat what you have said before."
     st.session_state['flow'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
     return st.session_state['flow']
 
 @st.cache_data
 # Criticize Core Arguments
 def criticize_text(conversation_id, ref, temperature=0.5):
-    content = f''' #Evaluate Strengths
-   - Discuss the strengths of each core argument you have fonud
+    content = f'''This Section is called 'Criticism of Core Arguments'
+    #Evaluate Strengths
+   - Discuss the strengths of each core argument presented in the text {ref}
    - Consider the logic, evidence, and reasoning used to support the arguments
 
 #Assess Weaknesses
@@ -386,7 +391,8 @@ def criticize_text(conversation_id, ref, temperature=0.5):
 @st.cache_data
 # Provide Alternative Viewpoints
 def counter_text(conversation_id, ref,  temperature=0.5):
-    content = f'''- Provide at least three alternative viewpoints on the text, each representing a different school of thought or interpretation method within Jewish philosophy.
+    content = f'''This Section is called 'Alternate Viewpoints'
+    - Provide at least three alternative viewpoints on the text {ref}, each representing a different school of thought or interpretation method within Jewish philosophy.
 - For each viewpoint, explain the key arguments, assumptions, and conclusions drawn from the text.
 - Analyze the strengths and weaknesses of each viewpoint, considering factors such as logical consistency, textual evidence, and compatibility with other Jewish teachings.
 - Conclude by synthesizing the insights gained from the different viewpoints and offering a balanced, nuanced understanding of the text's meaning and significance.
@@ -400,8 +406,9 @@ def counter_text(conversation_id, ref,  temperature=0.5):
 @st.cache_data
 # Impact on Philosophical Thought
 def impact_text(conversation_id, ref, temperature=0.5):
-    content = f'''#RESPONSE GUIDELINES:
-- Analyze how the text builds upon, challenges, or diverges from existing philosophical traditions
+    content = f'''This Section is called 'Impact of the Text on Philosophical Thought'
+    #RESPONSE GUIDELINES:
+- Analyze how the text {ref} builds upon, challenges, or diverges from existing philosophical traditions
 - Discuss the novel contributions the text makes to Jewish philosophical thought
 - Examine the broader philosophical implications and significance of the text's ideas
 - Evaluate the text's lasting impact and influence on subsequent philosophical works and thinkers
@@ -510,11 +517,11 @@ if user_question != st.session_state['prv_user_question']: #and st.session_state
     st.session_state['prv_user_question'] = user_question
     #st.sidebar.text_input("Ask a question:", key="reset", value="")  # Clear the input field
 
-st.sidebar.write('Get started with an example below:')
 #st.sidebar.write('')
 
 # Display conversation starter buttons if they should be shown
 if st.session_state['show_starters']:
+    st.sidebar.write('Get started with an example below:')
     col1, col2, col3 = st.sidebar.columns(3)
 
     with col1:
@@ -526,14 +533,14 @@ if st.session_state['show_starters']:
 
     with col2:
         if st.button("Turn the text into a movie"):
-            chatbot_response = movie_call_openai_api_with_memory(st.session_state['conversation_id'], 'user', 'First ask the user what is his favorite movie. Then turn the text into this movie', 1.5)
+            chatbot_response = movie_call_openai_api_with_memory(st.session_state['conversation_id'], 'user', 'First ask the user what is his favorite movie. Then turn the text into this movie', 1)
             st.session_state['chat_history'].append((f"**User:** Turn the text into a movie", f"**Chatbot:** {chatbot_response}"))
             st.session_state['show_starters'] = False
             st.rerun()
 
     with col3:
         if st.button("Turn the text into a song"):
-            chatbot_response = song_call_openai_api_with_memory(st.session_state['conversation_id'], 'user', 'Trun the text into a song', 1.5)
+            chatbot_response = song_call_openai_api_with_memory(st.session_state['conversation_id'], 'user', 'Trun the text into a song', 1)
             st.session_state['chat_history'].append((f"**User:** Trun the text into a song", f"**Chatbot:** {chatbot_response}"))
             st.session_state['show_starters'] = False
             st.rerun()
@@ -634,37 +641,37 @@ if book == 'Shev Shmateta':
 if book == 'Genesis':
     ref = 'Genesis'+', '+chapter
 
-with col1:
-    if st.button("Fetch and Translate"):
-            #st.write(ref)  # Debugging: Check if the button press is registered
-            if ref != st.session_state['ref']:
-                st.session_state['summary_expander_open'] = False
-                st.session_state['summary'] = ''
-                st.session_state['background_expander_open'] = False
-                st.session_state['background'] = ''
-                st.session_state['breakdown_expander_open'] = False
-                st.session_state['breakdown'] = ''
-                st.session_state['simplify_expander_open'] = False
-                st.session_state['simplify'] = ''
-                st.session_state['identify_expander_open'] = False
-                st.session_state['identify'] = ''
-                st.session_state['flow_expander_open'] = False
-                st.session_state['flow'] = ''
-                st.session_state['criticism_expander_open'] = False
-                st.session_state['criticism'] = ''
-                st.session_state['counter_expander_open'] = False
-                st.session_state['counter'] = ''
-                st.session_state['impact_expander_open'] = False
-                st.session_state['impact'] = ''
-                st.session_state['show_starters'] = True
+#with col1:
+if st.button("Fetch and Translate"):
+        #st.write(ref)  # Debugging: Check if the button press is registered
+        if ref != st.session_state['ref']:
+            st.session_state['summary_expander_open'] = False
+            st.session_state['summary'] = ''
+            st.session_state['background_expander_open'] = False
+            st.session_state['background'] = ''
+            st.session_state['breakdown_expander_open'] = False
+            st.session_state['breakdown'] = ''
+            st.session_state['simplify_expander_open'] = False
+            st.session_state['simplify'] = ''
+            st.session_state['identify_expander_open'] = False
+            st.session_state['identify'] = ''
+            st.session_state['flow_expander_open'] = False
+            st.session_state['flow'] = ''
+            st.session_state['criticism_expander_open'] = False
+            st.session_state['criticism'] = ''
+            st.session_state['counter_expander_open'] = False
+            st.session_state['counter'] = ''
+            st.session_state['impact_expander_open'] = False
+            st.session_state['impact'] = ''
+            st.session_state['show_starters'] = True
 
-            if ref:
-                fetch_text_from_sefaria(ref)
-                translate_native_text(st.session_state['conversation_id'], st.session_state['hebrew_text'])
-                st.session_state['ref']  = ref
-                #st.session_state['Text'] = 'Text'
-                #st.session_state['Translation'] = 'Translation'
-                st.rerun()
+        if ref:
+            fetch_text_from_sefaria(ref)
+            translate_native_text(st.session_state['conversation_id'], st.session_state['hebrew_text'])
+            st.session_state['ref']  = ref
+            #st.session_state['Text'] = 'Text'
+            #st.session_state['Translation'] = 'Translation'
+            st.rerun()
 
 
 # Create two columns
@@ -698,6 +705,7 @@ if 'summary' not in st.session_state:
 with st.expander("Summary", expanded=st.session_state['summary_expander_open']):
     #st.write(st.session_state['summary_expander_open'])
     if st.session_state['summary'] == '':
+        st.write('')
         if st.button("Summarize"):
             st.session_state['summary_expander_open'] = True
             summary = summary_text(st.session_state['conversation_id'], ref)
@@ -705,6 +713,7 @@ with st.expander("Summary", expanded=st.session_state['summary_expander_open']):
             st.rerun()
     col1sum, col2sum, col3sum = st.columns([0.3, 0.7, 0.3])
     with col2sum:
+        st.write('')
         st.write(st.session_state['summary'])
 
 
@@ -719,12 +728,14 @@ if 'background' not in st.session_state:
 
 with st.expander("Background Information", expanded=st.session_state['background_expander_open']):
     if st.session_state['background'] == '':
+        st.write('')
         if st.button("Get Backgound Information"):
             st.session_state['background_expander_open'] = True
             background = background_text(st.session_state['conversation_id'], ref)
             st.rerun()
     col1back, col2back, col3back = st.columns([0.3, 0.7, 0.3])
     with col2back:
+        st.write('')
         st.write(st.session_state['background'])
     #st.write('background')
 
@@ -745,12 +756,14 @@ if 'breakdown' not in st.session_state:
 
 with st.expander("Breakdown of Key Sections", expanded=st.session_state['breakdown_expander_open']):
     if st.session_state['breakdown'] == '':
+        st.write('')
         if st.button("Breakdown Key Sections"):
             st.session_state['breakdown_expander_open'] = True
             breakdown = breakdown_text(st.session_state['conversation_id'], ref)
             st.rerun()
     col1break, col2break, col3break = st.columns([0.3, 0.7, 0.3])
     with col2break:
+        st.write('')
         st.write(st.session_state['breakdown'])
     #st.write('background')
 
@@ -765,13 +778,17 @@ if 'simplify' not in st.session_state:
 
 with st.expander("Simplification of Challenging Passages", expanded=st.session_state['simplify_expander_open']):
     col1simp, col2simp, col3simp = st.columns([0.3, 0.7, 0.3])
+    #st.write('here')
     with col1simp:
-        passage = st.text_input('What passage do you find difficult?')
+        st.write('')
+        st.write('What passage do you find difficult?')
+        passage = st.text_input('.',label_visibility="collapsed")
         if st.button("Simplify"):
             st.session_state['simplify_expander_open'] = True
             simplify = simplify_text(st.session_state['conversation_id'], ref, passage)
             st.rerun()
     with col2simp:
+        st.write('')
         st.write(st.session_state['simplify'])
 
 
@@ -786,12 +803,14 @@ if 'identify' not in st.session_state:
 
 with st.expander("Identification and Summary of Core Arguments", expanded=st.session_state['identify_expander_open']):
     if st.session_state['identify'] == '':
+        st.write('')
         if st.button("Get Core Arguments"):
             st.session_state['identify_expander_open'] = True
             identify = identify_text(st.session_state['conversation_id'], ref)
             st.rerun()
     col1ident, col2ident, col3ident = st.columns([0.3, 0.7, 0.3])
     with col2ident:
+        st.write('')
         st.write(st.session_state['identify'])
 
 
@@ -805,12 +824,14 @@ if 'flow' not in st.session_state:
 
 with st.expander("Logical Connections Between Core Arguments ", expanded=st.session_state['flow_expander_open']):
     if st.session_state['flow'] == '':
+        st.write('')
         if st.button("Draw Logical Connections"):
             st.session_state['flow_expander_open'] = True
             flow = flow_text(st.session_state['conversation_id'], ref)
             st.rerun()
     col1flow, col2flow, col3flow = st.columns([0.3, 0.7, 0.3])
     with col2flow:
+        st.write('')
         st.write(st.session_state['flow'])
 
 
@@ -823,14 +844,16 @@ if 'criticism' not in st.session_state:
     st.session_state['criticism'] = ''
     st.session_state['criticism_expander_open'] = False
 
-with st.expander("Criticism Core Arguments", expanded=st.session_state['criticism_expander_open']):
+with st.expander("Criticism of Core Arguments", expanded=st.session_state['criticism_expander_open']):
     if st.session_state['criticism'] == '':
+        st.write('')
         if st.button("Criticize Core Arguments"):
             st.session_state['criticism_expander_open'] = True
             criticism = criticize_text(st.session_state['conversation_id'], ref)
             st.rerun()
     col1crit, col2crit, col3crit = st.columns([0.3, 0.7, 0.3])
     with col2crit:
+        st.write('')
         st.write(st.session_state['criticism'])
 
 
@@ -844,12 +867,14 @@ if 'counter' not in st.session_state:
 
 with st.expander("Alternative Viewpoints", expanded=st.session_state['counter_expander_open']):
     if st.session_state['counter'] == '':
+        st.write('')
         if st.button("Provide Alternative Viewpoints"):
             st.session_state['counter_expander_open'] = True
             counter = counter_text(st.session_state['conversation_id'], ref)
             st.rerun()
     col1counter, col2counter, col3counter = st.columns([0.3, 0.7, 0.3])
     with col2counter:
+        st.write('')
         st.write(st.session_state['counter'])
 
 #######
@@ -860,14 +885,16 @@ if 'impact' not in st.session_state:
     st.session_state['impact'] = ''
     st.session_state['impact_expander_open'] = False
 
-with st.expander("Impact of the text on Philosophical Thought", expanded=st.session_state['impact_expander_open']):
+with st.expander("Impact of the Text on Philosophical Thought", expanded=st.session_state['impact_expander_open']):
     if st.session_state['impact'] == '':
+        st.write('')
         if st.button("Get Impact"):
             st.session_state['impact_expander_open'] = True
             impact = impact_text(st.session_state['conversation_id'], ref)
             st.rerun()
     col1impact, col2impact, colimpact = st.columns([0.3, 0.7, 0.3])
     with col2impact:
+        st.write('')
         st.write(st.session_state['impact'])
 
 
@@ -886,6 +913,40 @@ body {
 
 # Inject the custom CSS into the Streamlit app
 st.markdown(custom_css, unsafe_allow_html=True)
+
+# Custom CSS to style the expanders
+st.markdown("""
+    <style>
+    /* Force the font size of the expander title (Summary) */
+    .stExpander .st-emotion-cache-1jvr2fz p {
+        font-size: 20px !important;
+        color: black;
+    }
+
+    /* Style the overall header */
+    .stExpander summary {
+        background-color: rgba(54,112,161,0.2) !important;
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+
+    * Target the specific input field */
+    div[data-testid="stTextInputRootElement"] input {
+        background-color: #D3D3D3;  /* Light grey background */
+        color: black;  /* Ensure text is readable */
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;  /* Optional: Adds a subtle border */
+
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # /* Target the content inside the expander */
+    # .stExpander div[data-testid="stExpanderDetails"] {
+    #     padding: 20px;
+    #     background-color: white;
 
 
 # # Inject JavaScript to scroll to the bottom of the page with a delay
