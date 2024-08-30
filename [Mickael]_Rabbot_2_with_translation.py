@@ -284,8 +284,8 @@ Chorus:
 
 #@st.cache_data
 #Function to re-write hebrew text
-def rewrite_hebrew_text(conversation_id, text, temperature=0.5):
-    content = f'''Re-write the following text in hebrew, avoiding repetition. Here is the text: \n{text}. Skip lines when appropriate.  Do not use bold or italic font, do not say what you have done, do not say anaything else. Respond with only the re-written text. '''
+def rewrite_hebrew_text(conversation_id, text, temperature=1):
+    content = f'''Re-write the following text in hebrew, avoiding repetition. Here is the text: \n{text}. Please, skip lines when appropriate.  Do not use bold or italic font, do not say what you have done, do not say anaything else. Respond with only the re-written text. '''
     st.session_state['hebrew_text'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
     return st.session_state['hebrew_text']
 
@@ -558,47 +558,6 @@ for question, response in reversed(st.session_state['chat_history']):
 
 
 
-# ############################ Chatbot ############################
-
-# import streamlit as st
-
-# # Ensure chat history is initialized only once
-# if 'chat_history' not in st.session_state:
-#     st.session_state['chat_history'] = []
-
-# # Sidebar Chatbot UI
-# st.sidebar.header("Copilot")
-# user_question = st.sidebar.text_input("Ask a question:")
-
-# # Create two columns for the buttons in the main layout
-# col1, col2, col3 = st.sidebar.columns(3)
-
-# with col1:
-#     text_button = st.button("Suggest a related text to study")
-
-# with col2:
-#     movie_button = st.button("Turn the text into a movie")
-
-# with col3:
-#     song_button = st.button("Turn the text into a song")
-
-# if text_button and user_question:
-#     chatbot_response = call_openai_api_with_memory(st.session_state['conversation_id'], 'user', user_question, 0.5)
-#     st.session_state['chat_history'].append((f"**User:** {user_question}", f"**Chatbot:** {chatbot_response}"))
-
-# if ask2_button and user_question:
-#     chatbot_response = call_openai_api_with_memory(st.session_state['conversation_id'], 'user', user_question, 0.5)
-#     st.session_state['chat_history'].append((f"**User:** {user_question}", f"**Chatbot:** {chatbot_response}"))
-
-# # Display the chat history
-# for question, response in reversed(st.session_state['chat_history']):
-#     st.sidebar.write(question)
-#     st.sidebar.write(response)
-
-
-
-
-
 
 
 
@@ -629,7 +588,7 @@ with col1:
     ("Shev Shmateta", "Tikkunei Zohar", "Genesis"),)
 
 with col2:
-    chapter = st.text_input("Chapter")
+    chapter = st.text_input("Chapter number")
 
 
 if book == 'Tikkunei Zohar' and 'a' not in chapter and 'b' not in chapter and 'c' not in chapter:
