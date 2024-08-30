@@ -48,7 +48,7 @@ if 'interaction' not in st.session_state:
 
 # Initialize the Streamlit app
 #add_logo("../[Sefaria_Bot]_2_UI/Assets/[Sefaria_Bot]_Spait_logo_no_backgound.jpeg", height=300)
-st.image("/Users/mickaelkomendyak/instances.ai@gmail.com - Google Drive/My Drive/[INST]_3_Projects/A_Active/P_Sefaria_Bot/[Sefaria_Bot]_2_UI/Assets/[Sefaria_Bot]_Spait_logo_no_backgound.jpeg", width=100)
+st.image("UI/Assets/[Sefaria_Bot]_Spait_logo_no_backgound.jpeg", width=100)
 
 st.title("Talmud Analysis Web Tool")
 st.write('')
