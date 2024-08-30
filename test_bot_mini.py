@@ -223,22 +223,22 @@ st.markdown(custom_css, unsafe_allow_html=True)
 
 
 # Inject JavaScript to scroll to the bottom of the page with a delay
-js = f"""
-<script>
-    function scroll(dummy_var_to_force_repeat_execution){{
-        var textAreas = parent.document.querySelectorAll('section.main');
-        setTimeout(function() {{
-            for (let index = 0; index < textAreas.length; index++) {{
-                textAreas[index].scrollTop = textAreas[index].scrollHeight;
-            }}
-        }}, 500);  // Adjust the delay as needed (500 milliseconds)
-    }}
-    scroll({len(st.session_state['interaction'])})
-</script>
-"""
+#js = f"""
+#<script>
+#    function scroll(dummy_var_to_force_repeat_execution){{
+#        var textAreas = parent.document.querySelectorAll('section.main');
+#        setTimeout(function() {{
+#            for (let index = 0; index < textAreas.length; index++) {{
+#                textAreas[index].scrollTop = textAreas[index].scrollHeight;
+#            }}
+#        }}, 500);  // Adjust the delay as needed (500 milliseconds)
+#    }}
+#    scroll({len(st.session_state['interaction'])})
+#</script>
+#"""
 
 # Execute the JavaScript in the app
-st.components.v1.html(js, height=0)
+#st.components.v1.html(js, height=0)
 
 
 # Initialize the Streamlit app
@@ -258,12 +258,17 @@ ref = st.text_input("Enter the text reference in the form 'Book, Chapter' (e.g.,
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
 
-# Sidebar Chatbot UI - This should be outside of any conditional logic
+# Sidebar Chatbot UI
 st.sidebar.header("Chat with the Analysis")
-user_question = st.sidebar.text_input("Ask a question:")
-if st.sidebar.button("Ask"):
+user_question = st.sidebar.text_input("Ask a question:", key="sidebar_question_input")
+if st.sidebar.button("Ask", key="sidebar_ask_button"):
     if user_question:
-        chatbot_response = call_openai_api_with_memory(st.session_state['conversation_id'], 'user', user_question, 0.5)
+        chatbot_response = call_openai_api_with_memory(
+            st.session_state['conversation_id'],
+            'user',
+            user_question,
+            0.5
+        )
         # Append the new chatbot response to the history
         st.session_state['chat_history'].append(f"**User:** {user_question}")
         st.session_state['chat_history'].append(f"**Chatbot:** {chatbot_response}")
@@ -273,15 +278,41 @@ for chat in st.session_state['chat_history']:
     st.sidebar.write(chat)
 
 
-#st.write('Button 1 | the state is: '+st.session_state['interaction'])
+if 'Fetch' not in st.session_state:
+    if st.button("Fetch Text"):
+        st.write("Button 1 Pressed!")  # Debugging: Check if the button press is registered
+        if ref:
+            hebrew_text = fetch_text_from_sefaria(ref)
+            if hebrew_text:
+                st.session_state['Fetch'] = 'Fetch'
+                #st.write('TOP of analyze | the state is: '+st.session_state['interaction'])
+                st.title("Text")
+                st.header("Hebrew Text")
+                st.write(f"<div style='font-family: Noto Sans Hebrew;'>{hebrew_text}</div>", unsafe_allow_html=True)
+                translation = translate_text(hebrew_text)
+                native = native_text(translation)
+                st.header("Translation")
+                st.write(native)
+
+if st.session_state['Fetch'] == 'Fetch':
+    st.button("Fetch Text")
+    st.title("Text")
+    st.header("Hebrew Text")
+    st.write(f"<div style='font-family: Noto Sans Hebrew;'>{hebrew_text}</div>", unsafe_allow_html=True)
+    translation = translate_text(hebrew_text)
+    native = native_text(translation)
+    st.header("Translation")
+    st.write(native)
+
+
 # Ensure only one button is used
-if st.button("Fetch and Analyze Text "):
-    st.write("Button Pressed!")  # Debugging: Check if the button press is registered
+if st.button("Fetch Text 2"):
+    st.write("Button 2 Pressed!")  # Debugging: Check if the button press is registered
     if ref:
         hebrew_text = fetch_text_from_sefaria(ref)
         if hebrew_text:
-            st.session_state['interaction'] = 'Loop 2'
-            #st.write('TOP of analyze | the state is: '+st.session_state['interaction'])
+            st.session_state['Fetch'] = 'Fetch Text'
+            st.write('TOP of analyze | the state is: '+st.session_state['interaction'])
             st.title("Text")
             st.header("Hebrew Text")
             st.write(f"<div style='font-family: Noto Sans Hebrew;'>{hebrew_text}</div>", unsafe_allow_html=True)
