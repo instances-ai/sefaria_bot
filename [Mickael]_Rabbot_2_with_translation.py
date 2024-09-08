@@ -21,7 +21,7 @@ from PIL import Image
 
 # Set the page configuration first
 im = Image.open("UI/Assets/favicon.ico")
-st.set_page_config(page_title="Talmud Analysis Web Tool", page_icon=im,layout="wide")
+st.set_page_config(page_title="Lomdai Analysis Tool", page_icon=im,layout="wide")
 
 # Load environment variables from .env file
 load_dotenv()
@@ -53,7 +53,7 @@ if 'interaction' not in st.session_state:
 st.image("UI/Assets/[Sefaria_Bot]_Spait_logo_no_backgound.jpeg", width=100)
 
 
-st.title("Talmud Analysis Web Tool")
+st.title("Lomdai Analysis Tool")
 st.write('')
 
 
@@ -99,7 +99,7 @@ def fetch_text_from_sefaria(ref):
         st.session_state['hebrew_text_raw'] = hebrew_text
         return st.session_state['hebrew_text_raw']
     else:
-        st.error("Failed to fetch text from Sefaria API")
+        st.error("Failed to fetch text")
         return None
 
 
@@ -114,15 +114,20 @@ You are helping students understand a complex philosophical work by making it mo
 You are an English-speaking Jewish Orthodox rabbi.
 
 #RESPONSE GUIDELINES:
-- Avoid explicitly stating your role or the task you are performing or shalom
-- Always reference the specific text you are working with, if known.
+- Avoid explicitly stating your role or the task you are performing or shalom.
+- Always reference the specific text you are working with, if known."
 - Encourage questions and discussion to engage the students with the material.
-- Avoid excessive use of jargon or technical language that may confuse the students
-- Use bold formatting to emphasize important terms and concepts
-- God should always be G-d
-- Hebrew names should be used (if possible); so Moses is Moshe, Aaron is Aharon
-- From the analysis remove anything which implies like we're evaluating the work, that would be inappropriate. It's not for us to judge, just to learn and apply
-- The usage in English translations of Moshe or Aharon instead of Moses or Aaron is called transliteration. Transliteration is the process of transferring a word from one alphabet or writing system to another, typically by representing each letter or character with a corresponding one from the target language. In this case, "Moshe" and "Aharon" are transliterations of the Hebrew names "מֹשֶׁה" and "אַהֲרֹן", respectively, using the Latin alphabet. This is in contrast to translation, which focuses on conveying the meaning of the word, rather than just its sound or spelling. Always use transliteration for Jewish names.'''}
+- Avoid excessive use of jargon or technical language that may confuse the students.
+- Use bold formatting to emphasize important terms and concepts.
+- God should always be G-d.
+- Hebrew names should be used (if possible); so Moses is Moshe, Aaron is Aharon.
+- Never imply that we're evaluating the work, that would be inappropriate. It's not for us to judge, just to learn and apply.
+- The usage in English translations of Moshe or Aharon instead of Moses or Aaron is called transliteration. Transliteration is the process of transferring a word from one alphabet or writing system to another, typically by representing each letter or character with a corresponding one from the target language. In this case, "Moshe" and "Aharon" are transliterations of the Hebrew names "מֹשֶׁה" and "אַהֲרֹן", respectively, using the Latin alphabet. This is in contrast to translation, which focuses on conveying the meaning of the word, rather than just its sound or spelling. Always use transliteration for Jewish names.
+- All answers should reflect the values, traditions, and norms of the Jewish community, maintaining a focus on Jewish law (Halakha), ethics, and worldview.
+- Respect for Jewish Legal Authority: The discussions should be in line with rabbinic authority and respect the integrity of Jewish legal tradition. It should avoid framing Jewish texts or concepts in ways that contradict or diverge from established halakhic or communal standards.
+- Cultural and Religious Relevance: The discussions should ensure that its insights and discussions are meaningful and applicable to Jewish individuals, families, and communities, keeping its application grounded in the needs and values of the Jewish context.
+- Insular or Exclusive Approach: The discussions should suggest an exclusive focus on Jewish legal and ethical discourse within the Jewish community, avoiding broader external debates or viewpoints that aren't relevant to internal Jewish life.
+'''}
         ]
 
     st.session_state['conversation_history'][conversation_id].append({"role": role, "content": content})
@@ -284,8 +289,8 @@ Chorus:
 
 #@st.cache_data
 #Function to re-write hebrew text
-def rewrite_hebrew_text(conversation_id, text, temperature=1):
-    content = f'''Re-write the following text in hebrew, avoiding repetition. Here is the text: \n{text}. Please, skip lines when appropriate.  Do not use bold or italic font, do not say what you have done, do not say anaything else. Respond with only the re-written text. '''
+def rewrite_hebrew_text(conversation_id, text, ref, temperature=1):
+    content = f'''This text is {ref}. Re-write the following text in hebrew, avoiding repetition. Here is the text: \n{text}. Please, skip lines when appropriate.  Do not use bold or italic font, do not say what you have done, do not say anaything else. Respond with only the re-written text. '''
     st.session_state['hebrew_text'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
     return st.session_state['hebrew_text']
 
@@ -301,11 +306,11 @@ def translate_native_text(conversation_id, text, temperature=0.5):
 def summary_text(conversation_id, ref, temperature=1):
     content = f'''#CONTEXT:
 This Section is called 'Summary'.
-This is the first section of the entire Jewish Texts analysis journey.
-The task is to analyze a given text and provide a brief overview focusing on the central philosophical question or problem addressed in the text: {ref}'
+This is the first section in a Jewish Texts analysis app.
+The task is to analyze a given text and provide a brief overview focusing on the central philosophical question or problem addressed in the text: {ref}. Always provide new and original information, never repeat what you have said in previous sections. Answer only with the summary, do not say anything else, do not say what you have done.'
 
-
-1. Identify the central philosophical question or problem addressed in the text: {ref}'
+#Task:
+1. Identify the central philosophical question or problem addressed in the text'
 2. Provide a brief overview of the text in one paragraph.
 3. Use emojis throughout the overview to make it more engaging and fun.
 4. Avoid using emojis in any further interactions beyond the overview.
@@ -323,30 +328,60 @@ The task is to analyze a given text and provide a brief overview focusing on the
 @st.cache_data
 # Backround Information
 def background_text(conversation_id, ref, temperature=1):
-    content = f"This Section is called 'Background Information'. Provide some background to the text '{ref}'. Always provide new information, never repeat what you have said i nprevious sections. Answer only with the backgound information, do not say anything else."
+    content = f'''#CONTEXT:
+This Section is called 'Backgound Information'.
+This is the second section in a Jewish Texts analysis app.
+The task is to provide backgound information on the text: {ref}'. Always provide new and original information, never repeat what you have said in previous sections. Answer only with the backgound information, do not say anything else, do not say what you have done.
+
+#Task:
+1. Book Overview: A brief summary of the book’s plot, themes, and purpose to give insight into how the chapter fits within the broader narrative or argument.
+2. Chapter Placement: How the chapter fits into the structure of the book—whether it introduces key ideas, builds on previous chapters, or concludes a part of the story or argument.
+3. Character or Theme Development: If relevant, how the chapter advances the development of characters, themes, or ideas within the book.
+4. Author’s Intentions: Information on the author’s motivations or intended messages in that specific chapter.
+5. Relevance to Overall Themes: Explanation of how the chapter supports or contrasts with the central themes or messages of the book.
+6. Literary Devices or Style: Notable techniques or styles used by the author in that chapter (e.g., symbolism, foreshadowing, tone) '''
     st.session_state['background'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
     return st.session_state['background']
 
 @st.cache_data
 # Breakdown of Key Sections
 def breakdown_text(conversation_id, ref, temperature=1):
-    content = f"This Section is called 'Breakdown of Key Sections'. Identify key sections or {ref} and for each do the following: 1. Main Idea: Summarize the main idea in 1-2 sentences. 2. Important Terminology or Concepts: Identify and define any crucial terminology or concepts introduced. 3. Relation to Overall Argument: Explain how this section or argument contributes to the overall thesis of the text."
+    content = f'''#CONTEXT:
+This Section is called 'Breakdown of Key Sections'.
+This is the third section in a Jewish Texts analysis app.
+The task is to identify key sections of {ref}. Always provide new and original information, never repeat what you have said in previous sections. Answer only with the breakdown of key sections, do not say anything else, do not say what you have done.
+
+#Task:
+1. Main Idea: Summarize the main idea in 1-2 sentences.
+2. Important Terminology or Concepts: Identify and define any crucial terminology or concepts introduced.
+3. Relation to Overall Argument: Explain how this section or argument contributes to the overall thesis of the text.'''
     st.session_state['breakdown'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
     return st.session_state['breakdown']
 
 @st.cache_data
 # Simplifying Challenging Passages
 def simplify_text(conversation_id, ref, passage, temperature=1):
-    content = f"This is Section is called 'Simplification of Challenging Passages'. The user finds this difficult: {passage} in the text {ref}. Locate the appropriate passage in the text and provide simplified explanations to aid understanding. Only answer with the explanations, do not say anything else."
+    content = f'''#CONTEXT:
+This Section is called 'Simplification of Challenging Passages'.
+This is the fourth section in a Jewish Texts analysis app.
+The user finds this passage difficult: \n'{passage}'\n in the text \n'{ref}'\n The task is to simplify a challenging passage provided by the user. Always provide new and original information, never repeat what you have said in previous sections. Answer only with the simplification of challenging passages, do not say anything else, do not say what you have done.
+
+Task:
+1. Locate the appropriate passage in the text
+2. Provide simplified explanations of this passage to aid understanding.'''
     st.session_state['simplify'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
     return st.session_state['simplify']
 
 @st.cache_data
 # Identify Core Arguments
 def identify_text(conversation_id, ref, temperature=1):
-    content = f'''This Section is called 'Identification and Summary of Core Arguments'
-    #TASK CRITERIA:
-1. Focus on identifying and summarizing the core arguments presented in the text {ref}
+    content = f'''#CONTEXT:
+This Section is called 'Identification of Core Arguments'.
+This is the fifth section in a Jewish Texts analysis app.
+The task is to identifying and summarizing the core arguments presented in the text {ref}. Always provide new and original information, never repeat what you have said in previous sections. Answer only with the identification of core arguments, do not say anything else, do not say what you have done.
+
+    #TASK:
+1. Focus on identifying and summarizing the core arguments presented in the text
 2. Provide clear explanations of the reasoning behind each argument
 3. Discuss the significance and implications of the arguments in the context of Jewish philosophy
 4. Avoid going into excessive detail or tangents unrelated to the core arguments
@@ -363,9 +398,9 @@ def flow_text(conversation_id, ref, temperature=0.5):
     return st.session_state['flow']
 
 @st.cache_data
-# Criticize Core Arguments
+# Challenges of Core Arguments
 def criticize_text(conversation_id, ref, temperature=0.5):
-    content = f'''This Section is called 'Criticism of Core Arguments'
+    content = f'''This Section is called 'Challenges of Core Arguments'
     #Evaluate Strengths
    - Discuss the strengths of each core argument presented in the text {ref}
    - Consider the logic, evidence, and reasoning used to support the arguments
@@ -381,7 +416,7 @@ def criticize_text(conversation_id, ref, temperature=0.5):
 #JEWISH PHILOSOPHICAL TEXT CRITERIA
     - Focus on the central arguments and claims made by the author
     - Consider the text within the broader context of Jewish philosophical thought
-    - Avoid personal opinions or biases; maintain a scholarly and objective tone
+    - Avoid personal opinions or biases; maintain a scholarly and objective tone internal to the jewish community
     - Use clear and concise language to convey your critical analysis
     - Use bullet points or numbered lists to present key points within each section
     - Use proper formatting for any quotes or references to the original text
@@ -410,6 +445,7 @@ def counter_text(conversation_id, ref,  temperature=0.5):
 def impact_text(conversation_id, ref, temperature=0.5):
     content = f'''This Section is called 'Impact of the Text on Philosophical Thought'
     #RESPONSE GUIDELINES:
+- Explain this in a way to make it fun and intriguing to discuss at a Shabbat dinner
 - Analyze how the text {ref} builds upon, challenges, or diverges from existing philosophical traditions
 - Discuss the novel contributions the text makes to Jewish philosophical thought
 - Examine the broader philosophical implications and significance of the text's ideas
@@ -428,7 +464,7 @@ def impact_text(conversation_id, ref, temperature=0.5):
 - Use clear headings and subheadings to organize your analysis
 - Provide a brief introduction outlining the text's main themes and arguments
 - Dedicate separate sections to discussing the text's philosophical contributions, implications, and impact
-- Conclude with a summary of your overall assessment and the text's significance in Jewish philosophical thought'''
+- Conclude several ways to use this text to inspire a Shabbat table converstaion'''
     st.session_state['impact'] = call_openai_api_with_memory(conversation_id, "user", content, temperature)
     return st.session_state['impact']
 
@@ -498,7 +534,7 @@ def impact_text(conversation_id, ref, temperature=0.5):
 
 
 
-############################ Chatbot ############################
+############################ Copilot ############################
 
 # Ensure chat history and starter visibility are initialized only once
 if 'chat_history' not in st.session_state:
@@ -528,8 +564,8 @@ if st.session_state['show_starters']:
 
     with col1:
         if st.button("Suggest a related text"):
-            chatbot_response = texts_call_openai_api_with_memory(st.session_state['conversation_id'], 'user', 'Suggest a related text to {ref} to study', 0.5)
-            st.session_state['chat_history'].append((f"**User:** Suggest a related text to {ref} to study", f"**Chatbot:** {chatbot_response}"))
+            chatbot_response = texts_call_openai_api_with_memory(st.session_state['conversation_id'], 'user', "Suggest a related text to {st.session_state['ref_user']} to study", 0.5)
+            st.session_state['chat_history'].append((f"**User:** Suggest a related text to {st.session_state['ref_user']} to study", f"**Chatbot:** {chatbot_response}"))
             st.session_state['show_starters'] = False
             st.rerun()
 
@@ -571,12 +607,9 @@ for question, response in reversed(st.session_state['chat_history']):
 st.header("Choose your Text 📖")
 
 if 'translation' not in st.session_state:
-    #st.session_state['Fetch'] = ''
-    #st.session_state['hebrew_text'] = ''
     st.session_state['translation'] = ''
     st.session_state['ref'] = ''
-    #st.session_state['Text'] = ''
-    #st.session_state['Translation'] = ''
+    st.session_state['ref_user'] = ''
 
 # Create two columns
 col1, col2, col3, col4, col5, col6 = st.columns(6)
@@ -585,22 +618,26 @@ col1, col2, col3, col4, col5, col6 = st.columns(6)
 with col1:
     book = st.selectbox(
     "Book",
-    ("Shev Shmateta", "Tikkunei Zohar", "Genesis"),)
+    ("Shev Shmayasa", "Tikkunei Zohar", "Genesis"),)
 
 with col2:
     chapter = st.text_input("Chapter number")
 
 
 if book == 'Tikkunei Zohar' and 'a' not in chapter and 'b' not in chapter and 'c' not in chapter:
-    ref = 'Tikkunei_Zohar'+', '+chapter+'a'
+    ref = 'Tikkunei_Zohar, '+chapter+'a'
+    ref_user = 'Tikkunei Zohar, '+chapter+'a'
 else:
-    ref = 'Tikkunei_Zohar'+', '+chapter
+    ref = 'Tikkunei_Zohar, '+chapter
+    ref_user = 'Tikkunei Zohar, '+chapter
 
-if book == 'Shev Shmateta':
-    ref = 'Shev_Shmateta'+', '+'Shmatta '+chapter
+if book == 'Shev Shmayasa':
+    ref = 'Shev_Shmateta, '+'Shmatta '+chapter
+    ref_user = 'Shev Shmayasa, '+chapter
 
 if book == 'Genesis':
-    ref = 'Genesis'+', '+chapter
+    ref = 'Genesis, '+chapter
+    ref_user = 'Genesis, '+chapter
 
 #with col1:
 if st.button("Fetch and Translate"):
@@ -628,9 +665,10 @@ if st.button("Fetch and Translate"):
 
         if ref:
             fetch_text_from_sefaria(ref)
-            rewrite_hebrew_text(st.session_state['conversation_id'], st.session_state['hebrew_text_raw'], temperature=1)
+            rewrite_hebrew_text(st.session_state['conversation_id'], st.session_state['hebrew_text_raw'], ref_user, temperature=1)
             translate_native_text(st.session_state['conversation_id'], st.session_state['hebrew_text'])
             st.session_state['ref']  = ref
+            st.session_state['ref_user']  = ref_user
             #st.session_state['Text'] = 'Text'
             #st.session_state['Translation'] = 'Translation'
             st.rerun()
@@ -670,7 +708,7 @@ with st.expander("Summary", expanded=st.session_state['summary_expander_open']):
         st.write('')
         if st.button("Summarize"):
             st.session_state['summary_expander_open'] = True
-            summary = summary_text(st.session_state['conversation_id'], ref)
+            summary = summary_text(st.session_state['conversation_id'], st.session_state['ref_user'])
             #st.write('Button 1 pressed')
             st.rerun()
     col1sum, col2sum, col3sum = st.columns([0.3, 0.7, 0.3])
@@ -693,7 +731,7 @@ with st.expander("Background Information", expanded=st.session_state['background
         st.write('')
         if st.button("Get Backgound Information"):
             st.session_state['background_expander_open'] = True
-            background = background_text(st.session_state['conversation_id'], ref)
+            background = background_text(st.session_state['conversation_id'], st.session_state['ref_user'])
             st.rerun()
     col1back, col2back, col3back = st.columns([0.3, 0.7, 0.3])
     with col2back:
@@ -721,7 +759,7 @@ with st.expander("Breakdown of Key Sections", expanded=st.session_state['breakdo
         st.write('')
         if st.button("Breakdown Key Sections"):
             st.session_state['breakdown_expander_open'] = True
-            breakdown = breakdown_text(st.session_state['conversation_id'], ref)
+            breakdown = breakdown_text(st.session_state['conversation_id'], st.session_state['ref_user'])
             st.rerun()
     col1break, col2break, col3break = st.columns([0.3, 0.7, 0.3])
     with col2break:
@@ -747,7 +785,7 @@ with st.expander("Simplification of Challenging Passages", expanded=st.session_s
         passage = st.text_input('.',label_visibility="collapsed")
         if st.button("Simplify"):
             st.session_state['simplify_expander_open'] = True
-            simplify = simplify_text(st.session_state['conversation_id'], ref, passage)
+            simplify = simplify_text(st.session_state['conversation_id'], st.session_state['ref_user'], passage)
             st.rerun()
     with col2simp:
         st.write('')
@@ -768,7 +806,7 @@ with st.expander("Identification and Summary of Core Arguments", expanded=st.ses
         st.write('')
         if st.button("Get Core Arguments"):
             st.session_state['identify_expander_open'] = True
-            identify = identify_text(st.session_state['conversation_id'], ref)
+            identify = identify_text(st.session_state['conversation_id'], st.session_state['ref_user'])
             st.rerun()
     col1ident, col2ident, col3ident = st.columns([0.3, 0.7, 0.3])
     with col2ident:
@@ -789,7 +827,7 @@ with st.expander("Logical Connections Between Core Arguments ", expanded=st.sess
         st.write('')
         if st.button("Draw Logical Connections"):
             st.session_state['flow_expander_open'] = True
-            flow = flow_text(st.session_state['conversation_id'], ref)
+            flow = flow_text(st.session_state['conversation_id'], st.session_state['ref_user'])
             st.rerun()
     col1flow, col2flow, col3flow = st.columns([0.3, 0.7, 0.3])
     with col2flow:
@@ -806,12 +844,12 @@ if 'criticism' not in st.session_state:
     st.session_state['criticism'] = ''
     st.session_state['criticism_expander_open'] = False
 
-with st.expander("Criticism of Core Arguments", expanded=st.session_state['criticism_expander_open']):
+with st.expander("Challenges of Core Arguments", expanded=st.session_state['criticism_expander_open']):
     if st.session_state['criticism'] == '':
         st.write('')
         if st.button("Criticize Core Arguments"):
             st.session_state['criticism_expander_open'] = True
-            criticism = criticize_text(st.session_state['conversation_id'], ref)
+            criticism = criticize_text(st.session_state['conversation_id'], st.session_state['ref_user'])
             st.rerun()
     col1crit, col2crit, col3crit = st.columns([0.3, 0.7, 0.3])
     with col2crit:
@@ -832,7 +870,7 @@ with st.expander("Alternative Viewpoints", expanded=st.session_state['counter_ex
         st.write('')
         if st.button("Provide Alternative Viewpoints"):
             st.session_state['counter_expander_open'] = True
-            counter = counter_text(st.session_state['conversation_id'], ref)
+            counter = counter_text(st.session_state['conversation_id'], st.session_state['ref_user'])
             st.rerun()
     col1counter, col2counter, col3counter = st.columns([0.3, 0.7, 0.3])
     with col2counter:
@@ -852,7 +890,7 @@ with st.expander("Impact of the Text on Philosophical Thought", expanded=st.sess
         st.write('')
         if st.button("Get Impact"):
             st.session_state['impact_expander_open'] = True
-            impact = impact_text(st.session_state['conversation_id'], ref)
+            impact = impact_text(st.session_state['conversation_id'], st.session_state['ref_user'])
             st.rerun()
     col1impact, col2impact, colimpact = st.columns([0.3, 0.7, 0.3])
     with col2impact:
